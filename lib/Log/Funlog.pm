@@ -1,17 +1,17 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.40 2004/12/27 17:39:56 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.45 2005/01/25 23:15:08 gab Exp $
 
 =head1 NAME
 
 Log::Funlog - Log module with fun inside!
- 
+
 =head1 SYNOPSIS
 
  use Log::Funlog;
  *my_sub=Log::Funlog->new(
- 	parameter => value,
- 	...
+	parameter => value,
+	...
  );
- 
+
  my_sub(priority,string,string, ... );
 
 =head1 DESCRIPTION
@@ -79,7 +79,7 @@ See L</EXAMPLE>
 
 Pattern specifying the header of your logs.
 
-The fields are made like this: %<B<letter>><B<delimiter1>><B<delimiter2>><B<same_letter>>
+The fields are made like this: %<B<letter>><B<delimiters1>><B<delimiters2>><B<same_letter>>
 
 The B<letter> is, for now:
 
@@ -88,9 +88,12 @@ The B<letter> is, for now:
 	p: name of the prog
 	l: verbosity level
 
-B<delimiter> is what you want, but MUST BE one character long (replacement regexp is s/\%<letter>(.?)(.?)<letter>/$1<field>$2/ ). B<delimiter1> will be put before the field once expanded, B<delimiter2> after.
+B<delimiters1> is something taken from +-=|!./\<{([ and B<delimiters2> is take from +-=|!./\>})] (replacement regexp is s/\%<letter>([<delimiters1>]*)([<delimiters2>*)<letter>/$1<field>$2/ ). B<delimiters1> will be put before the field once expanded, B<delimiters2> after.
 
-Example: '%dd %p::p hey %l[]l %s{}s ' should produce something like:
+Example:
+ '%dd %p::p hey %l[]l %s{}s '
+ 
+should produce something like:
 
  Wed Sep 22 18:50:34 2004 :gna.pl: hey [x    ] {sub48} Something happened
  ^------this is %dd-----^ ^%p::p^      ^%l[]l^ ^%s{}s^
@@ -98,6 +101,26 @@ Example: '%dd %p::p hey %l[]l %s{}s ' should produce something like:
 If no header is specified, no header will be written, and you would have:
 
  Something happened
+
+Although you can specify a pattern like that:
+ ' -{(%d(<>)d)}%p-<>-p %l-<()>-l '
+
+is not advisable because the code that whatch for the header is not that smart...
+
+Putting things in %?? is good only for %ss because stack won't be printed if there is nothing to print:
+ ' {%ss} '
+
+will print something like that if you log from anywhere than a sub:
+ {}
+
+Although
+ ' %s{}s '
+
+won't print anything if you log from outside a sub. Both will have the same effect if you log from a sub.
+
+You should probably always write things like:
+ ' -{((<%dd>))}-<%pp>- -<(%ll)>- '
+
 
 I<NOTE NOTE NOTE>: The fields are subject to change!
 
@@ -167,7 +190,7 @@ Here is an example with almost all of the options enabled:
 		cosmetic => 'x',		#crosses for the level
 		fun => 10,			#10% of fun (que je passe autour de moi)
 		error_header => 'Groumpf... ',  #Header for true errors
-		header => '%dd %p[]p %l[]l ',	#The header
+		header => '%dd %p[]p %l[]l %s{[]} ',	#The header
 		caller => 1);			#and I want the name of the last sub
 
  Log(1,"I'm logged...");
@@ -180,9 +203,9 @@ Here is an example with almost all of the options enabled:
  }
  ze_sub;
  error("Zut");
- 
+
  :wq
- 
+
  $ ./gna.pl
  Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] I'm logged...
  Wed Sep 22 18:50:34 2004 [gna.pl] [xxx  ] Me too...
@@ -193,7 +216,19 @@ Here is an example with almost all of the options enabled:
 
 =head1 BUGS
 
-Hopefully none :)
+This:
+
+ header => '-(%dd)--( %p)><(p )-( %l)-<>-(l %s)<>(s '
+ 
+won't do what you expect ( this is the ')><(' )
+
+Workaround is:
+
+ header => '-(%dd)--( )>%pp<( )-( %l)-<>-(l %s)<>(s '
+
+And this kind of workaround work for everything but %ss, as it is not calculated during initialization.
+
+ 
 
 =head1 DISCUSSION
 
@@ -203,7 +238,7 @@ I guess that calling the sub each time you want to log something (and even if it
 
 Especially if you look at the code, and you see all the stuffs the module do before printing something.
 
-But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something.
+But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something, and what to write
 
 If you want a I<really> fast routine of log, please propose me a way to do it, or do it yourself, or do not log :)
 
@@ -243,8 +278,8 @@ BEGIN {
 	use Exporter;
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
-	@EXPORT_OK=qw( error );
-	$VERSION=0.82_1;
+	@EXPORT_OK=qw( &error );
+	$VERSION=0.83;
 }
 use Carp;
 use strict;
@@ -254,16 +289,61 @@ my @fun=<DATA>;
 chomp @fun;
 my $count=0;
 
-use vars qw( %args $me $error_header $error);
+use vars qw( %args $me $error_header $error $metaheader);
 
+# Defined here, used later!
+####################################"
+my $rexpleft=q/<>{}()[]/;				#Regular expression that are supposed to be on the left of the thing to print
+my $rexprite=$rexpleft;
+$rexprite=~tr/><}{)(][/<>{}()[]/;		#tr same for right
+my $rexpsym=q'+-=|!.\/';		#These can by anywhere (left or right)
+$rexpleft=quotemeta $rexpleft;
+$rexprite=quotemeta $rexprite;
+$rexpsym=quotemeta $rexpsym;
+my $level;
+my $LOCK_SH=1;
+my $LOCK_EX=2;
+my $LOCK_NB=4;
+my $LOCK_UN=8;
+my $handleout;			#Handle of the output
+my %whattoprint;
+
+################################################################################################################################
+sub replace {						#replace things like %l<-->l by things like <-** ->
+	my $header=shift;
+	my $what=shift;
+	my $center=shift;
+	if ($center) {
+		$header=~s/\%$what$what/$center/;				# for cases like %dd
+		#
+		# Now, for complicated cases like %d<-->d or %d-<>-d
+		# 
+		$header=~s/\%$what(.*[$rexpleft]+)([$rexprite]+.*)$what/$1$center$2/;	#%d-<>-d   -> -<plop>-
+																				#%d<-->d   -> <-->
+		$header=~s/\%$what(.*[$rexpsym]+)([$rexpsym]+.*)$what/$1$center$2/;		#-<plop>-  -> -<plop>-
+																				#<-->      -> <-plop->
+	} else {
+		$header=~s/\%$what.*$what//;
+	}
+	return $header;
+}
+################################################################################################################################
+################################################################################################################################
 sub new {
 	my $this = shift;
 	my $class = ref($this) || $this;
 	%args=@_;							#getting args to a hash
+
+	# Okay, now sanity checking!
+	# This is cool because we have time, so we can do all sort of checking, calculating, things like that
+	#########################################
 	if (defined $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
 	croak "'verbose' should be of the form n/m or max/m" if (($args{'verbose'} !~ /^\d+\/\d+$/) and ($args{'verbose'} !~ /^max\/\d+$/));
+
+	# Parsing 'verbose' option...
+	#########################################
 	my ($verbose,$levelmax)=split('/',$args{verbose});
 	$levelmax=$levelmax ? $levelmax : "";						#in case it is not defined...
 	$verbose=$levelmax if ($verbose =~ /^max$/);
@@ -275,106 +355,138 @@ sub new {
 		$args{levelmax}=$levelmax;
 	}
 	croak "'verbose' should be of the form 'n/m', where n<=m, which not seem to be the case: $args{verbose} > $args{levelmax}" if ($args{verbose} > $args{levelmax});
+
+	# Time for fun!
+	#########################################
 	if ($args{'fun'}) {
 		croak "'fun' should only be a number" if ($args{fun} !~ /^\d+$/);
 	}
-	croak "0<fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<=0));                   #>pc<
+	croak "0<fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<=0));
+
+	# Error handler
+	#########################################
 	$error_header=defined $args{error_header} ? $args{error_header} : '## Oops! ##';
+
+	# We define default cosmetic if no one was defined
+	#########################################
 	$args{cosmetic}='x' if (not defined $args{cosmetic});
-	$me=`basename $0`;
-	chomp $me;
+
+	# Parsing header. Goal is to avoid work in the wr() function
+	#########################################
+	if (defined $args{header}) {
+
+		$metaheader=$args{header};
+
+		# if %ll is present, we can be sure that it will always be, be it will vary
+		$whattoprint{'l'}=1 if ($metaheader=~/\%l.*l/);
+		$metaheader=replace($metaheader,"l","\$level");
+
+		# same for %dd
+		$whattoprint{'d'}=1 if ($metaheader=~/\%d.*d/);
+		$metaheader=replace($metaheader,"d","\$date");
+
+		# but %pp won't vary
+		$me=`basename $0`;
+		chomp $me;
+		$whattoprint{'p'}=1 if ($metaheader=~/\%p.*p/);
+		$metaheader=replace($metaheader,"p",$me);
+		# and stack will be present or not, depending of the state of the stack
+		$whattoprint{'s'}=1 if ($metaheader=~/\%s.*s/);
+
+		
+	} else {
+		$metaheader="";
+	}
+
+	# Daemon. We calculate here the output handle to use
+	##########################################
+	if ($args{'daemon'}) {
+		open($handleout,">>$args{'file'}") or croak "$!";
+	} else {
+		$handleout=\*STDERR;
+	}
+
+
 	my $self = \&wr;
 	bless $self, $class;
-	return $self;					#Return the function's adress
+	return $self;					#Return the function's address
 }
+
+#################################
+# This is the main function
+#################################
 sub wr {
 	my $level=shift;						#log level wanted by the user
 	return if ($level > $args{verbose} or $level == 0);	#and exit if it is greater than the verbosity
-	my $LOCK_SH=1;
-	my $LOCK_EX=2;
-	my $LOCK_NB=4;
-	my $LOCK_UN=8;
-	if ($args{daemon}) {					#write to a file if I am a daemon
-		open(LOG,">>$args{file}") or croak "$!";
-		select LOG;
-		flock LOG, $LOCK_EX;
-	} else {								#write to stderr if not
-		select STDERR;
-	}
+
+	my $prevhandle=select $handleout;
+
+# Header building!!
 #####################################
-#	Header building!!
-#####################################
-	
-	my $logstring;
-	my $header=defined $args{header} ? $args{header} : "";
-# 	Date
-	my $tmp=scalar localtime;
-	$header=~s/\%d(.?)(.?)d/$1$tmp$2/;
-#	Nom du programme
-	$header=~s/\%p(.?)(.?)p/$1$me$2/;
-#	Niveau de Log
-	if (defined $args{cosmetic}) {
-		$tmp=$args{cosmetic} x $level. " " x ($args{levelmax} - $level);
-	}
-	$header=~s/\%l(.?)(.?)l/$1$tmp$2/;
-	$logstring.=" " if ((defined $logstring) and ($logstring ne ""));
-	if ($args{'caller'}) {						#if the user want the call stack
-		my $caller;
-		if (($args{'caller'} =~ /^last$/) or ($args{'caller'} =~ /^1$/)) {
-			$caller=(caller($error?3:2))[3]
-		} else {						#okay... I will have to unstack all the calls to an array...
-			my @stack;
-			my $i=1;
-			while (my $tmp=(caller($error?$i+1:$i))[3]) {	#turn as long as there is something on the stack
-				push @stack,($tmp);
-				$i++;
-			};
-			@stack=reverse @stack;
-			if ($args{'caller'} eq "all") {;					#all the calls
-				$caller=join(':',@stack);
-			} else {
-				if ($#stack >= 0) {
-					my $num=$args{'caller'};
-					$num=$#stack if ($num>=$#stack);		#in case the stack is greater that the number of call we want to print
-					if ($args{'caller'} eq "all") {							#all the cals
-						$caller=join(':',@stack);
-					} elsif ($args{'caller'} =~ /^-\d+$/) {					#the n first calls
-						$caller=join(':',splice(@stack,0,-$num));
-					} elsif ($args{'caller'} =~ /^\d+$/) {					#just the n last calls
-						$caller=join(':',splice(@stack,1+$#stack-$num));
+
+	if ($metaheader) {							#Hey hey! Won't calculate anything if there is nothing to print!
+		my $header=$metaheader;
+		if ($whattoprint{'s'}) {						#if the user want to print the call stack
+			my $caller;
+			if (($args{'caller'} =~ /^last$/) or ($args{'caller'} =~ /^1$/)) {
+				$caller=(caller($error?3:2))[3]
+			} else {						#okay... I will have to unstack all the calls to an array...
+				my @stack;
+				my $i=1;
+				while (my $tmp=(caller($error?$i+1:$i))[3]) {	#turn as long as there is something on the stack
+					push @stack,($tmp);
+					$i++;
+				};
+				@stack=reverse @stack;
+				if ($args{'caller'} eq "all") {;					#all the calls
+					$caller=join(':',@stack);
+				} else {
+					if ($#stack >= 0) {
+						my $num=$args{'caller'};
+						$num=$#stack if ($num>=$#stack);		#in case the stack is greater that the number of call we want to print
+						if ($args{'caller'} eq "all") {							#all the cals
+							$caller=join(':',@stack);
+						} elsif ($args{'caller'} =~ /^-\d+$/) {					#the n first calls
+							$caller=join(':',splice(@stack,0,-$num));
+						} elsif ($args{'caller'} =~ /^\d+$/) {					#just the n last calls
+							$caller=join(':',splice(@stack,1+$#stack-$num));
+						}
 					}
 				}
 			}
-		}
 
-		if ($caller) {							#if there were something on the stack (ie: we are not in 'main')
-			$caller=~s/main\:\://g;				#wipe 'main'
-			my @a=split(/\//,$caller);			#split..
-			@a=reverse @a;						#reverse...
-			my $tmp=join(':',@a);				#then join!
-			$header=~s/\%s(.?)(.?)s/$1$tmp$2/;
+			if ($caller) {							#if there were something on the stack (ie: we are not in 'main')
+				$caller=~s/main\:\://g;				#wipe 'main'
+				my @a=split(/\//,$caller);			#split..
+				@a=reverse @a;						#reverse...
+				$header=replace($header,"s",join(':',@a));
+			} else {
+				$header=replace($header,"s");
+			}
 		} else {
-			$header=~s/\%s.?.?s//;
+			$header=replace($header,"s");
 		}
-		undef $caller;
-	} else {
-		$header=~s/\%s.?.?s//;
-	}
-		
-#####################################
-#	End oh header building
-#####################################
+		if ($whattoprint{'d'}) {
+			my $tmp=scalar localtime;
+			$header=~s/\$date/$tmp/;
+		}
+		if ($whattoprint{'l'}) {
+			my $tmp=$args{cosmetic} x $level. " " x ($args{levelmax} - $level);
+			$header=~s/\$level/$tmp/;
+		}
 
-	print $header if (defined $header);					#print the header
-	print $logstring if (defined $logstring);
+		#####################################
+		#	End oh header building
+		#####################################
+		print $header;						#print the header
+	}
 	while (my $tolog=shift) {			#and then print all the things the user wants me to print
 		print $tolog;
 	}
 	print "\n";
-#   Passe le fun autour de toi!
-    print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#write a bit of fun, but not in the first 10 lines
-	close LOG if ($args{daemon});
-	select(STDOUT);
+	#Passe le fun autour de toi!
+	print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#write a bit of fun, but not in the first 10 lines
+	select($prevhandle);
 	$count++;
 	return 1;
 }

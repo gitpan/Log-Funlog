@@ -8,7 +8,7 @@ use Log::Funlog qw( error );
 	cosmetic => '*',
 	fun => 50,
 	caller => 'all',
-	header => ' %dd %pp %l//l %s{}s '
+	header => ' ) %dd ( )>-%pp-<(O)>%l--l<( %s{||}s '
 );
 for ($j=1;$j<=5;$j++) {
 	ok( Log($j,"Log level $j") );

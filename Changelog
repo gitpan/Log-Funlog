@@ -2,8 +2,14 @@ vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
 
- 0.82_1
+ 0.83		25/01/2005
  - README Updated
+ - Speed improvement (I hope)
+ - You can now say %d<-->d or %d-><-d or funny things like that (as long as it
+ is somewhat symetric)
+ - Clarity code improvement
+
+ 0.82_1
  
  0.82		27/12/2004
  - Numbering change so that it conforms to perl usage, and you can say:

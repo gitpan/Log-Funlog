@@ -1,10 +1,11 @@
-$Header: /var/cvs/sources/Funlog/README,v 1.14 2004/12/29 15:57:17 gab Exp $
+$Header: /var/cvs/sources/Funlog/README,v 1.16 2005/01/25 22:33:14 gab Exp $
 vim600: set textwidth=80:
 
 Log::Funlog - Log with fun!
 
 Gab
-korsani(removeme)@free(removeme).fr(removeagain)
+korsani\ /free\
+		@      fr
 
  ,+---------------------------------- -  -   -    -     -
 ( | Description
@@ -120,7 +121,9 @@ Wed Dec 29 16:51:58 2004 plop.pl [xx   ]  plop27
 Fait froid, dans ce process, non?
 Wed Dec 29 16:51:58 2004 plop.pl [xxx  ]  plop28
 Wed Dec 29 16:51:58 2004 plop.pl [x    ]  plop31
------------------- cut -------------------------
+------------------ (snip) -------------------------
+
+------------------ (snip) -------------------------
 Wed Dec 29 16:51:58 2004 plop.pl [xx   ]  plop97
 Wed Dec 29 16:51:58 2004 plop.pl [xxx  ]  plop98
 Wed Dec 29 16:51:58 2004 plop.pl [x    ]  Groumpf... Oops!

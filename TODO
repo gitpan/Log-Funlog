@@ -2,3 +2,4 @@
 - Politically correct version (with no code related to fun). Made with a diff? Modulable code compiled? ("make pc ? perl Makefile.PL --pc?")
 - maybe code and/or speed improvement ;)
 - check if cosmetic if 1 char long
+- Improve testing codes
