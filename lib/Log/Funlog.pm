@@ -31,7 +31,8 @@ then the module will analyse if the priority if higher enough (seeing B<L<verbos
 L<Funlog.pm> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
 
 Parameters are: L<B<header>>, L<B<error_header>>, L<B<cosmetic>>, L<B<verbose>>, L<B<file>>, L<B<daemon>>, L<B<fun>> and L<B<caller>>
-L<B<levelmax>> and L<B<verbose>> are mandatory.
+
+L<B<verbose>> is mandatory.
 
 I<NOTE NOTE NOTE>: Interface (B<header>) is subject to change!
 
@@ -39,30 +40,28 @@ I<NOTE NOTE NOTE>: Interface (B<header>) is subject to change!
 
 =over
 
-=item B<levelmax>
-
-Maximum log level you want. Should be something like 3, maybe 5.
-
 =item B<verbose>
 
-Verbosity of your script. Everything that is logged with a priority more than this will not be logged.
+Should be of the form 'B<n>/B<m>', where B<n><B<m>.
+
+B<n> is the wanted verbosity of your script, B<m> if the maximum verbosity of your script.
+
+Everything that is logged with a priority more than B<n>will not be logged.
 
 0 if you do not want anything to be printed (??? what for ???)
 
-The common way to define B<verbose> is to take it from the command line with Getopt:
+The common way to define B<n> is to take it from the command line with Getopt:
 
  use Getopt::Long;
  use Log::Funlog;
  &GetOptions("verbose",\$verbose);
  *Log=Log::Funlog(
 	[...]
-	verbose => $verbose,
+	verbose => "$verbose/5",
 	[...]
 	)
 
-
-MUST be less or equal to B<levelmax> or the module will complain.
-
+This option is backward compatible with 0.7.x.x versions.
 
 =back
 
@@ -74,16 +73,20 @@ MUST be less or equal to B<levelmax> or the module will complain.
 
 Pattern specifying the header of your logs.
 
-The fields are:
+The fields are made like this: %<B<letter>><B<delimiter1>><B<delimiter2>><B<same_letter>>
 
-	%s: stack of the calling sub
-	%d: date
-	%p: name of the prog
-	%l: verbosity level
+The B<letter> is, for now:
 
-Example: '%d :%p: [ %l ] {%s} ' should produce something like:
+	s: stack of the calling sub
+	d: date
+	p: name of the prog
+	l: verbosity level
 
- Wed Sep 22 18:50:34 2004 :gna.pl: [ x     ] {sub1} Something happened
+B<delimiter> is what you want, but MUST BE one character long (replacement regexp is s/\%<letter>(.?)(.?)<letter>/$1<field>$2/ ). B<delimiter1> will be put before the field once expanded, B<delimiter2> after.
+
+Example: '%dd %p::p %l[]l %s{}s ' should produce something like:
+
+ Wed Sep 22 18:50:34 2004 :gna.pl: [x    ] {sub1} Something happened
 
 If no header is specified, no header will be written, and you would have:
 
@@ -95,7 +98,7 @@ I<NOTE NOTE NOTE>: The fields are subject to change!
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
-When B<daemon>=1, Log::Funlog write to B<L<file>> instead of B<STDERR>
+When B<daemon>=1, L<Log::Funlog> write to B<L<file>> instead of B<STDERR>
 
 If you specify B<daemon>, you must specify B<L<file>>
 
@@ -112,9 +115,10 @@ MUST be specified if you specify B<daemon>
 The date is printed like: Thu Aug 14 13:56:56 2003
 
 =item B<cosmetic>
-An alphanumeric char you want to see in the logs.
 
-There will be as many as these chars as the loglevel of the string being logged.
+An alphanumeric char to indicate the log level in your logs.
+
+There will be as many as these chars as the log level of the string being logged. See L<EXAMPLE>
 
 Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
 
@@ -130,7 +134,7 @@ Probs of fun in your logs.
 
 Should be: 0<fun<=100
 
-See the sources of Funlog.pm if you want to change the sentences
+See the sources of L<Log::Funlog> if you want to change the sentences
 
 =item B<caller>
 1 if you want the name of the subroutine which is logging.
@@ -148,9 +152,9 @@ Here is an example with almost all of the options enabled:
  $ vi gna.pl
  #!/usr/bin/perl -w
  use Log::Funlog qw( error );
- *Log=Log::Funlog->new(levelmax => 5,		#Loglevel max: 5
+ *Log=Log::Funlog->new(
 		file => "zou.log",		#name of the file
-		verbose => 3,			#verbose 3
+		verbose => "3/5",			#verbose 3 out of 5
 		daemon => 0,			#I am not a daemon
 		cosmetic => 'x',		#crosses for the level
 		fun => 10,			#10% of fun (que je passe autour de moi)
@@ -177,6 +181,11 @@ Here is an example with almost all of the options enabled:
  Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Onetwo1C++
  Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Groumpf...  oups!
  Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Groumpf...  Zut
+
+
+=head1 BUGS
+
+Hopefully none :)
 
 =head1 DISCUSSION
 
@@ -225,7 +234,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.8.0.0';
+	$VERSION='0.8.0.1';
 }
 use Carp;
 use strict;
@@ -241,11 +250,17 @@ sub new {
 	if (defined $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
-	croak "'levelmax' missing" unless (defined $args{levelmax});
-	#croak "Manque 'daemon'" unless (defined $args{daemon});
-	croak "'verbose' missing" unless (defined $args{verbose});
-	croak "verbose > levelmax (which value is $args{levelmax})" if ($args{verbose} > $args{levelmax});
-	croak "0<=fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<0));                   #>pc<
+	my ($verbose,$levelmax)=split('/',$args{verbose});
+	$levelmax=$levelmax ? $levelmax : "";						#in case it is not defined...
+	if (($verbose !~ /\d+/) or ($levelmax !~ /\d+/)) {
+		warn "Arguments in 'verbose' should be of the form n/m, where n and m are numerics.\nAs this is a new feature, I'll assume you didn't upgraded your script so I'll make it compatible...\nAnyhow, consider upgrading soon!\n";
+		croak "No 'levelmax' provided" unless ($args{levelmax});
+	} else {
+		$args{verbose}=$verbose;
+		$args{levelmax}=$levelmax;
+	}
+	croak "'verbose' should be of the form 'n/m', where n<=m, which not seem to be the case: $args{verbose} > $args{levelmax}" if ($args{verbose} > $args{levelmax});
+	croak "0<fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<=0));                   #>pc<
 	$error_header=defined $args{error_header} ? $args{error_header} : '## Oops! ##';
 	
 	$me=`basename $0`;
@@ -277,13 +292,13 @@ sub wr {
 	my $header=defined $args{header} ? $args{header} : "";
 # 	Date
 	my $tmp=scalar localtime;
-	$header=~s/\%d/$tmp/;
+	$header=~s/\%d(.?)(.?)d/$1$tmp$2/;
 #	Nom du programme
-	$header=~s/\%p/$me/;
+	$header=~s/\%p(.?)(.?)p/$1$me$2/;
 #	Niveau de Log
 	if (defined $args{cosmetic}) {
 		$tmp=$args{cosmetic} x $level. " " x ($args{levelmax} - $level);
-		$header=~s/\%l/$tmp/;
+		$header=~s/\%l(.?)(.?)l/$1$tmp$2/;
 	}
 	$logstring.=" " if ((defined $logstring) and ($logstring ne ""));
 	if ($args{'caller'}) {						#if the user want the call stack
@@ -302,9 +317,9 @@ sub wr {
 			my @a=split(/\//,$caller);
 			@a=reverse @a;
 			my $tmp=join(':',@a);
-			$header=~s/\%s/$tmp/;
+			$header=~s/\%s(.?)(.?)s/$1$tmp$2/;
 		} else {
-			$header=~s/\%s//;
+			$header=~s/\%s.?.?s//;
 		}
 		undef $caller;
 	}

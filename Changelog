@@ -2,7 +2,10 @@ korsani@free.fr
 
 Some revisions were not posted on CPAN; they were "internal"
 
+ 0.8.0.1	22/09/2004	: An other change in the interface: 'verbose' should be of the form n/m. Anyway, it is backward compatible :)
  0.8.0.0	22/09/2004	: New interface, much more flexible, more compact, but SUBJECT TO CHANGE!!
+ 						:  No more 'date' and 'prog' option
+ 						:  Not backward compatible, but your script don't ceased to work :)
  						: Fix 'error_header' bug
 						: Doc update
 						: No installation type specified

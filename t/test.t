@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 use Test::Simple tests => 17;
 use Log::Funlog qw( error );
-*Log=Log::Funlog->new(levelmax => 5,
+*Log=Log::Funlog->new(
 	file => "zou.log",
-	verbose => 5,
+	verbose => '5/5',
 	fun => 10,
 	cosmetic => '*',
 	fun => 50,
