@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.18 2004/09/29 09:04:16 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.25 2004/12/08 18:38:15 gab Exp $
 
 =head1 NAME
 
@@ -18,9 +18,9 @@ Log::Funlog - Log module with fun inside!
 
 This is a Perl module intended ton manage the logs you want to do from your Perl scripts.
 
-It should be easy to use, and provide all the functions you should want.
+It should be easy to use, and provide all the fonctionalities you want.
 
-Just initialise the module, then use is as if it was an ordinary function!
+Just initialize the module, then use is as if it was an ordinary function!
 
 When you want to log something, just write:
 
@@ -28,13 +28,15 @@ When you want to log something, just write:
 
 then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
 
-L<Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
+As more, the module can write funny things to your logs, if you want ;) It can be very verbose, or just ... shy :)
 
-Parameters are: L<B<header>>, L<B<error_header>>, L<B<cosmetic>>, L<B<verbose>>, L<B<file>>, L<B<daemon>>, L<B<fun>> and L<B<caller>>
+L<Log::Funlog|Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
 
-L<B<verbose>> is mandatory.
+Parameters are: B<L<header>>, B<L<error_header>>, B<L<cosmetic>>, B<L<verbose>>, B<L<file>>, B<L<daemon>>, B<L<fun>> and L<B<caller>|caller>
 
-I<NOTE NOTE NOTE>: Interface (B<header>) is subject to change!
+L<B<verbose>|verbose> is mandatory.
+
+I<NOTE NOTE NOTE>: Interface (L<B<header>|header>) is subject to change!
 
 =head2 MANDATORY OPTION
 
@@ -48,14 +50,14 @@ B<n> is the wanted verbosity of your script, B<m> if the maximum verbosity of yo
 
 Everything that is logged with a priority more than B<n> will not be logged.
 
-0 if you do not want anything to be printed (??? what for ???)
+0 if you do not want anything to be printed.
 
 The common way to define B<n> is to take it from the command line with Getopt:
 
  use Getopt::Long;
  use Log::Funlog;
  &GetOptions("verbose",\$verbose);
- *Log=Log::Funlog(
+ *Log=new Log::Funlog(
 	[...]
 	verbose => "$verbose/5",
 	[...]
@@ -63,7 +65,7 @@ The common way to define B<n> is to take it from the command line with Getopt:
 
 This option is backward compatible with 0.7.x.x versions.
 
-See L<EXAMPLES>
+See L<Example|EXAMPLE>
 
 =back
 
@@ -79,7 +81,7 @@ The fields are made like this: %<B<letter>><B<delimiter1>><B<delimiter2>><B<same
 
 The B<letter> is, for now:
 
-	s: stack of the calling sub
+	s: stack calls
 	d: date
 	p: name of the prog
 	l: verbosity level
@@ -88,7 +90,8 @@ B<delimiter> is what you want, but MUST BE one character long (replacement regex
 
 Example: '%dd %p::p hey %l[]l %s{}s ' should produce something like:
 
- Wed Sep 22 18:50:34 2004 :gna.pl: hey [x    ] {sub1} Something happened
+ Wed Sep 22 18:50:34 2004 :gna.pl: hey [x    ] {sub48} Something happened
+ ^------this is %dd-----^ ^%p::p^      ^%l[]l^ ^%s{}s^
 
 If no header is specified, no header will be written, and you would have:
 
@@ -100,23 +103,23 @@ I<NOTE NOTE NOTE>: The fields are subject to change!
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
-When B<daemon>=1, L<Log::Funlog> write to B<L<file>> instead of B<STDERR>
+When B<daemon>=1, L<Log::Funlog|Log::Funlog> write to B<L<file>> instead of B<STDERR>
 
-If you specify B<daemon>, you must specify B<L<file>>
+If you specify B<daemon>, you must specify L<B<file>|file>
 
-The common way to do is the same that with B<L<verbose>>: with Getopt
+The common way to do is the same that with L<B<verbose>|verbose>: with Getopt
 
 =item B<file>
 
 File to write logs to.
 
-MUST be specified if you specify B<daemon>
+MUST be specified if you specify L<B<daemon>|daemon>
 
 =item B<cosmetic>
 
 An alphanumeric char to indicate the log level in your logs.
 
-There will be as many as these chars as the log level of the string being logged. See L<EXAMPLE>
+There will be as many as these chars as the log level of the string being logged. See L<Example|EXAMPLE>
 
 Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
 
@@ -132,14 +135,15 @@ Probs of fun in your logs.
 
 Should be: 0<fun<=100
 
-See the sources of L<Log::Funlog> if you want to change the sentences
+See the sources of L<Log::Funlog|Log::Funlog> if you want to change the sentences
 
 =item B<caller>
+
 1 if you want the name of the subroutine which is logging.
 
 'all' if you want the stack of subs
 
-Of course, nothing will happen if no B<header> is specified, nor %s in the B<header> ...
+Of course, nothing will happen if no L<B<header>|header> is specified, nor %ss in the L<B<header>|header> ...
 
 =back
 
@@ -150,14 +154,14 @@ Here is an example with almost all of the options enabled:
  $ vi gna.pl
  #!/usr/bin/perl -w
  use Log::Funlog qw( error );
- *Log=Log::Funlog->new(
+ *Log=new Log::Funlog(
 		file => "zou.log",		#name of the file
 		verbose => "3/5",			#verbose 3 out of a maximum of 5
 		daemon => 0,			#I am not a daemon
 		cosmetic => 'x',		#crosses for the level
 		fun => 10,			#10% of fun (que je passe autour de moi)
 		error_header => 'Groumpf... ',  #Header for true errors
-		header => '%dd %p[]p %l[] ',	#The header
+		header => '%dd %p[]p %l[]l ',	#The header
 		caller => 1);			#and I want the name of the last sub
 
  Log(1,"I'm logged...");
@@ -215,7 +219,9 @@ See Changelog
 
 Gabriel Guillon
 
-korsani@free.fr
+korsani-spam@free-spam.fr-spam
+
+(remove you-know-what :)
 
 =head1 LICENCE
 
@@ -232,7 +238,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.8.0.2';
+	$VERSION='0.8.0.3';
 }
 use Carp;
 use strict;
@@ -308,13 +314,13 @@ sub wr {
 				$i++;
 			};
 		} else {								#okay, the user want only the top of the call stack
-			$caller=(caller($error?2:1))[3];	#I get the only the last
+			$caller=(caller($error?2:1))[3];	#I take the only the last
 		}
-		if ($caller) {							#if I there were something on the stack (ie: we are not in 'main')
-			$caller=~s/main\:\://g;
-			my @a=split(/\//,$caller);
-			@a=reverse @a;
-			my $tmp=join(':',@a);
+		if ($caller) {							#if there were something on the stack (ie: we are not in 'main')
+			$caller=~s/main\:\://g;				#wipe 'main'
+			my @a=split(/\//,$caller);			#split..
+			@a=reverse @a;						#reverse...
+			my $tmp=join(':',@a);				#then join!
 			$header=~s/\%s(.?)(.?)s/$1$tmp$2/;
 		} else {
 			$header=~s/\%s.?.?s//;

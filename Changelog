@@ -2,6 +2,8 @@ korsani@free.fr
 
 Some revisions were not posted on CPAN; they were "internal"
 
+ 0.8.0.4	08/12/2004	: Doc bug fix
+ 0.8.0.3	30/09/2004	: Doc improvement
  0.8.0.2	29/09/2004	: Bug fixes: header was garbled is 'cosmetic' or 'caller' were not specified as options but were in header
  0.8.0.1	22/09/2004	: An other change in the interface: 'verbose' should be of the form n/m. Anyway, it is backward compatible :)
  0.8.0.0	22/09/2004	: New interface, much more flexible, more compact, but SUBJECT TO CHANGE!!

@@ -1,18 +1,20 @@
-$Header: /var/cvs/sources/Funlog/README,v 1.7 2004/09/23 15:31:27 gab Exp $
+$Header: /var/cvs/sources/Funlog/README,v 1.11 2004/12/09 00:35:01 gab Exp $
 Log::Funlog - Log with fun!
 
 Gab
-korsani@free.fr
+korsani(removeme)@free(removeme).fr(removeagain)
 
-* Description
-------------------------------------
+ ,+---------------------------------- -  -   -    -     -
+( | Description
+ `+---------------------------------- -  -   -    -     -
 Easy to use and funny log module :P
 
 I tried to make it fast and convenient. That mean that there is as few as possible mandatory option when initializing the module (actually, there is only one :) and it is REALLY easy to use.
 No headache to choose wether or not put this option, and you don't screw your brain trying to understand what this bloody option do. All is simple.
 
-* Features:
-------------------------------------
+ ,+---------------------------------- -  -   -    -     -
+( | Features:
+ `+---------------------------------- -  -   -    -     -
 - Log level (verbosity, as much as you want)
 - Logging to stderr or file (as you want)
 - Print stack of calling subs (if you want)
@@ -23,8 +25,9 @@ No headache to choose wether or not put this option, and you don't screw your br
 Feel free to modify this module to your convenience.
 
 
-* Install
-------------------------------------
+ ,+---------------------------------- -  -   -    -     -
+( | Install
+ `+---------------------------------- -  -   -    -     -
 perl Makefile.PL
 make
 (make test)
@@ -33,13 +36,16 @@ sudo make install
 Note: you can perl Makefile.PL INSTALLDIRS=vendor if you want to make the module not dependant of your perl version.
 I made a 'vendor' install by default, but it seems that not all perl distros can install as 'vendor'...
 
-* Use
-------------------------------------
+ ,+---------------------------------- -  -   -    -     -
+( | Use
+ `+---------------------------------- -  -   -    -     -
 Simple way: no header, log to stderr, no fun, just log :)
+If you have just one thing to remember, it is this form.
 
 use Log::Funlog;
 *Log=Log::Funlog->new(
-	verbose => '3/5');	#verbose 3 out of 5
+	verbose => '3/5'	#verbose 3 out of 5	
+);
 Log(1,"plop");			#this will be printed	
 Log(2,"plop");			#this too
 Log(3,"plop");			#this again
