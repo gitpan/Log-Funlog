@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-#$Header: /var/cvs/sources/Funlog/Makefile.PL,v 1.10 2004/12/19 23:18:13 gab Exp $
+#$Header: /var/cvs/sources/Funlog/Makefile.PL,v 1.11 2005/02/17 11:24:25 gab Exp $
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
@@ -7,7 +7,8 @@ WriteMakefile(
 	NAME			=>	'Log::Funlog',
 	VERSION_FROM	=>	"lib/Log/Funlog.pm",
 	AUTHOR			=>	'Gabriel Guillon <korsani(removeme)@free(removeme).fr(removeagain)>',
-	PM_FILTER		=>	'grep -v Pfiou'
+	PM_FILTER		=>	'grep -v Pfiou',
+	PL_FILES		=>	{},
 );
 #sub MY::postamble {
 #	return <<'MAKE_FRAG';

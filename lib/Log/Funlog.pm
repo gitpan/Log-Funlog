@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.45 2005/01/25 23:15:08 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.48 2005/02/17 11:24:25 gab Exp $
 
 =head1 NAME
 
@@ -105,7 +105,7 @@ If no header is specified, no header will be written, and you would have:
 Although you can specify a pattern like that:
  ' -{(%d(<>)d)}%p-<>-p %l-<()>-l '
 
-is not advisable because the code that whatch for the header is not that smart...
+is not advisable because the code that whatch for the header is not that smart and will probably won't do what you expect.
 
 Putting things in %?? is good only for %ss because stack won't be printed if there is nothing to print:
  ' {%ss} '
@@ -116,7 +116,7 @@ will print something like that if you log from anywhere than a sub:
 Although
  ' %s{}s '
 
-won't print anything if you log from outside a sub. Both will have the same effect if you log from a sub.
+won't print anything if you log from outside a sub. Both will have the same effect if you log from inside a sub.
 
 You should probably always write things like:
  ' -{((<%dd>))}-<%pp>- -<(%ll)>- '
@@ -139,6 +139,10 @@ The common way to do is the same that with L</verbose>: with Getopt
 File to write logs to.
 
 MUST be specified if you specify L</daemon>
+
+File is opened when initializing, and never closed by the module. That is mainly to avoid open and close the file each time you log something and then increase speed.
+
+Side effect is that if you tail -f the log file, you won't see them in real time.
 
 =item B<cosmetic>
 
@@ -190,7 +194,7 @@ Here is an example with almost all of the options enabled:
 		cosmetic => 'x',		#crosses for the level
 		fun => 10,			#10% of fun (que je passe autour de moi)
 		error_header => 'Groumpf... ',  #Header for true errors
-		header => '%dd %p[]p %l[]l %s{[]} ',	#The header
+		header => '%dd %p[]p %l[]l %s{}s ',	#The header
 		caller => 1);			#and I want the name of the last sub
 
  Log(1,"I'm logged...");
@@ -279,7 +283,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION=0.83;
+	$VERSION=0.83_1;
 }
 use Carp;
 use strict;
@@ -348,7 +352,7 @@ sub new {
 	$levelmax=$levelmax ? $levelmax : "";						#in case it is not defined...
 	$verbose=$levelmax if ($verbose =~ /^max$/);
 	if (($verbose !~ /\d+/) or ($levelmax !~ /\d+/)) {
-		warn "Arguments in 'verbose' should be of the form n/m, where n and m are numerics.\nAs this is a new feature, I'll assume you didn't upgraded your script so I'll make it compatible...\nAnyhow, consider upgrading soon!\n";
+		carp "Arguments in 'verbose' should be of the form n/m, where n and m are numerics.\nAs this is a new feature, I'll assume you didn't upgraded your script so I'll make it compatible...\nAnyhow, consider upgrading soon!\n";
 		croak "No 'levelmax' provided" unless ($args{levelmax});
 	} else {
 		$args{verbose}=$verbose;
@@ -392,8 +396,10 @@ sub new {
 		$metaheader=replace($metaheader,"p",$me);
 		# and stack will be present or not, depending of the state of the stack
 		$whattoprint{'s'}=1 if ($metaheader=~/\%s.*s/);
-
-		
+		if (! defined $args{'caller'}) {
+			carp "\%ss is defined but 'caller' option is not specified.\nI assume 'caller => 1'";
+			$args{'caller'}=1;
+		}
 	} else {
 		$metaheader="";
 	}
@@ -429,7 +435,7 @@ sub wr {
 		if ($whattoprint{'s'}) {						#if the user want to print the call stack
 			my $caller;
 			if (($args{'caller'} =~ /^last$/) or ($args{'caller'} =~ /^1$/)) {
-				$caller=(caller($error?3:2))[3]
+				$caller=(caller($error?2:1))[3];
 			} else {						#okay... I will have to unstack all the calls to an array...
 				my @stack;
 				my $i=1;

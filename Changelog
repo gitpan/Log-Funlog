@@ -2,6 +2,10 @@ vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
 
+ 0.83_1		17/02/2005
+ - warn if %ss is specified and 'caller' was not, then assume caller => 1
+ - caller => 1 was bugged
+
  0.83		25/01/2005
  - README Updated
  - Speed improvement (I hope)
@@ -9,12 +13,9 @@ Some revisions were not posted on CPAN; they were "internal"
  is somewhat symetric)
  - Clarity code improvement
 
- 0.82_1
- 
  0.82		27/12/2004
  - Numbering change so that it conforms to perl usage, and you can say:
  	use Log::Funlog 0.82;
-
  - You can now say:
  	verbose => 'n/m',
  and n can be 'max'. What for? In case of n is an option of the command line,
