@@ -1,4 +1,5 @@
-$Header: /var/cvs/sources/Funlog/README,v 1.11 2004/12/09 00:35:01 gab Exp $
+$Header: /var/cvs/sources/Funlog/README,v 1.12 2004/12/09 22:14:55 gab Exp $
+
 Log::Funlog - Log with fun!
 
 Gab
@@ -7,6 +8,7 @@ korsani(removeme)@free(removeme).fr(removeagain)
  ,+---------------------------------- -  -   -    -     -
 ( | Description
  `+---------------------------------- -  -   -    -     -
+
 Easy to use and funny log module :P
 
 I tried to make it fast and convenient. That mean that there is as few as possible mandatory option when initializing the module (actually, there is only one :) and it is REALLY easy to use.
@@ -15,6 +17,7 @@ No headache to choose wether or not put this option, and you don't screw your br
  ,+---------------------------------- -  -   -    -     -
 ( | Features:
  `+---------------------------------- -  -   -    -     -
+
 - Log level (verbosity, as much as you want)
 - Logging to stderr or file (as you want)
 - Print stack of calling subs (if you want)
@@ -28,6 +31,7 @@ Feel free to modify this module to your convenience.
  ,+---------------------------------- -  -   -    -     -
 ( | Install
  `+---------------------------------- -  -   -    -     -
+
 perl Makefile.PL
 make
 (make test)
@@ -39,6 +43,7 @@ I made a 'vendor' install by default, but it seems that not all perl distros can
  ,+---------------------------------- -  -   -    -     -
 ( | Use
  `+---------------------------------- -  -   -    -     -
+
 Simple way: no header, log to stderr, no fun, just log :)
 If you have just one thing to remember, it is this form.
 

@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.25 2004/12/08 18:38:15 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.33 2004/12/19 23:19:00 gab Exp $
 
 =head1 NAME
 
@@ -26,17 +26,17 @@ When you want to log something, just write:
 
  your-sub-log(priority,"what"," I ","wanna log")
 
-then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
+then the module will analyse if the priority if higher enough (seeing L</verbose> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
 
 As more, the module can write funny things to your logs, if you want ;) It can be very verbose, or just ... shy :)
 
 L<Log::Funlog|Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
 
-Parameters are: B<L<header>>, B<L<error_header>>, B<L<cosmetic>>, B<L<verbose>>, B<L<file>>, B<L<daemon>>, B<L<fun>> and L<B<caller>|caller>
+Parameters are: L</header>, L</error_header>, L</cosmetic>, L</verbose>, L</file>, L</daemon>, L</fun> and L</caller>
 
-L<B<verbose>|verbose> is mandatory.
+L</verbose> is mandatory.
 
-I<NOTE NOTE NOTE>: Interface (L<B<header>|header>) is subject to change!
+B<NOTE NOTE NOTE>: Interface (L</header>) is subject to change!
 
 =head2 MANDATORY OPTION
 
@@ -44,7 +44,7 @@ I<NOTE NOTE NOTE>: Interface (L<B<header>|header>) is subject to change!
 
 =item B<verbose>
 
-Should be of the form 'B<n>/B<m>', where B<n><B<m>.
+In the form B<n>/B<m>, where B<n><B<m>.
 
 B<n> is the wanted verbosity of your script, B<m> if the maximum verbosity of your script.
 
@@ -65,7 +65,7 @@ The common way to define B<n> is to take it from the command line with Getopt:
 
 This option is backward compatible with 0.7.x.x versions.
 
-See L<Example|EXAMPLE>
+See L</EXAMPLE>
 
 =back
 
@@ -103,23 +103,23 @@ I<NOTE NOTE NOTE>: The fields are subject to change!
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
-When B<daemon>=1, L<Log::Funlog|Log::Funlog> write to B<L<file>> instead of B<STDERR>
+When B<daemon>=1, L<Log::Funlog|Log::Funlog> write to L</file> instead of B<STDERR>
 
-If you specify B<daemon>, you must specify L<B<file>|file>
+If you specify B<daemon>, you must specify L</file>
 
-The common way to do is the same that with L<B<verbose>|verbose>: with Getopt
+The common way to do is the same that with L</verbose>: with Getopt
 
 =item B<file>
 
 File to write logs to.
 
-MUST be specified if you specify L<B<daemon>|daemon>
+MUST be specified if you specify L</daemon>
 
 =item B<cosmetic>
 
 An alphanumeric char to indicate the log level in your logs.
 
-There will be as many as these chars as the log level of the string being logged. See L<Example|EXAMPLE>
+There will be as many as these chars as the log level of the string being logged. See L</EXAMPLE>
 
 Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
 
@@ -129,7 +129,7 @@ Header you want to see in the logs when you call the B<error> function (if you i
 
 Default is '## Oops! ##'.
 
-=item B<fun>
+=item B<fun>=n%
 
 Probs of fun in your logs.
 
@@ -139,11 +139,15 @@ See the sources of L<Log::Funlog|Log::Funlog> if you want to change the sentence
 
 =item B<caller>
 
-1 if you want the name of the subroutine which is logging.
+'all' if you want the stack of subs.
 
-'all' if you want the stack of subs
+'last' if you want the last call.
 
-Of course, nothing will happen if no L<B<header>|header> is specified, nor %ss in the L<B<header>|header> ...
+If you specify a number B<n>, it will print the B<n> last calls (yes, if you specify '1', it is equivalent to 'last')
+
+If this number is negative, it will print the B<n> first calls.
+
+Of course, nothing will happen if no L</header> is specified, nor %ss in the L</header> ...
 
 =back
 
@@ -238,15 +242,18 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.8.0.3';
+	$VERSION='0.8.1.0';
 }
 use Carp;
 use strict;
 #use Sys::Syslog;
+use Scalar::Util qw(tainted);
 my @fun=<DATA>;
 chomp @fun;
 my $count=0;
+
 use vars qw( %args $me $error_header $error);
+
 sub new {
 	my $this = shift;
 	my $class = ref($this) || $this;
@@ -254,6 +261,7 @@ sub new {
 	if (defined $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
+	croak "'verbose' should be of the form n/m" if ($args{'verbose'} !~ /^\d+\/\d+$/);
 	my ($verbose,$levelmax)=split('/',$args{verbose});
 	$levelmax=$levelmax ? $levelmax : "";						#in case it is not defined...
 	if (($verbose !~ /\d+/) or ($levelmax !~ /\d+/)) {
@@ -264,12 +272,14 @@ sub new {
 		$args{levelmax}=$levelmax;
 	}
 	croak "'verbose' should be of the form 'n/m', where n<=m, which not seem to be the case: $args{verbose} > $args{levelmax}" if ($args{verbose} > $args{levelmax});
+	if ($args{'fun'}) {
+		croak "'fun' should only be a number" if ($args{fun} !~ /^\d+$/);
+	}
 	croak "0<fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<=0));                   #>pc<
 	$error_header=defined $args{error_header} ? $args{error_header} : '## Oops! ##';
 	$args{cosmetic}='x' if (not defined $args{cosmetic});
 	$me=`basename $0`;
 	chomp $me;
-
 	my $self = \&wr;
 	bless $self, $class;
 	return $self;					#Return the function's adress
@@ -307,15 +317,33 @@ sub wr {
 	$logstring.=" " if ((defined $logstring) and ($logstring ne ""));
 	if ($args{'caller'}) {						#if the user want the call stack
 		my $caller;
-		if ($args{'caller'} eq "all") {			#if the user want ALL the call stack
+		if (($args{'caller'} =~ /^last$/) or ($args{'caller'} =~ /^1$/)) {
+			$caller=(caller($error?3:2))[3]
+		} else {						#okay... I will have to unstack all the calls to an array...
+			my @stack;
 			my $i=1;
 			while (my $tmp=(caller($error?$i+1:$i))[3]) {	#turn as long as there is something on the stack
-				$caller.=$tmp."/";
+				push @stack,($tmp);
 				$i++;
 			};
-		} else {								#okay, the user want only the top of the call stack
-			$caller=(caller($error?2:1))[3];	#I take the only the last
+			@stack=reverse @stack;
+			if ($args{'caller'} eq "all") {;					#all the calls
+				$caller=join(':',@stack);
+			} else {
+				if ($#stack >= 0) {
+					my $num=$args{'caller'};
+					$num=$#stack if ($num>=$#stack);		#in case the stack is greater that the number of call we want to print
+					if ($args{'caller'} eq "all") {							#all the cals
+						$caller=join(':',@stack);
+					} elsif ($args{'caller'} =~ /^-\d+$/) {					#the n first calls
+						$caller=join(':',splice(@stack,0,-$num));
+					} elsif ($args{'caller'} =~ /^\d+$/) {					#just the n last calls
+						$caller=join(':',splice(@stack,1+$#stack-$num));
+					}
+				}
+			}
 		}
+
 		if ($caller) {							#if there were something on the stack (ie: we are not in 'main')
 			$caller=~s/main\:\://g;				#wipe 'main'
 			my @a=split(/\//,$caller);			#split..
@@ -350,6 +378,7 @@ sub wr {
 sub error {
 	$error=1;
 	wr(1,$error_header," ",@_);
+	$error=0;
 	return 1;
 }
 1;
