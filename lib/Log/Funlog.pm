@@ -283,7 +283,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION=0.83_1;
+	$VERSION=0.83_2;
 }
 use Carp;
 use strict;
@@ -396,7 +396,7 @@ sub new {
 		$metaheader=replace($metaheader,"p",$me);
 		# and stack will be present or not, depending of the state of the stack
 		$whattoprint{'s'}=1 if ($metaheader=~/\%s.*s/);
-		if (! defined $args{'caller'}) {
+		if ((! defined $args{'caller'}) and ($metaheader=~/\%s.*s/)) {
 			carp "\%ss is defined but 'caller' option is not specified.\nI assume 'caller => 1'";
 			$args{'caller'}=1;
 		}

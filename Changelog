@@ -2,9 +2,13 @@ vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
 
+ 0.83_2		08/03/2005
+ - complain that %ss was defined without 'caller' option even if you don't
+ specify %ss
+ 
  0.83_1		17/02/2005
- - warn if %ss is specified and 'caller' was not, then assume caller => 1
  - caller => 1 was bugged
+ - warn if %ss is specified and 'caller' was not, then assume caller => 1
 
  0.83		25/01/2005
  - README Updated
@@ -19,7 +23,7 @@ Some revisions were not posted on CPAN; they were "internal"
  - You can now say:
  	verbose => 'n/m',
  and n can be 'max'. What for? In case of n is an option of the command line,
- and you the max debug level: you don't have to remember what is the max debug
+ and you want the max debug level: you don't have to remember what is the max debug
  level, just say 'max' :)
 
  0.8.1.1	21/12/2004
