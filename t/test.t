@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-use Test::Simple tests => 29;
+use Test::Simple tests => 30;
 use Log::Funlog qw( error );
 *Log=Log::Funlog->new(
 	file => "zou.log",
@@ -41,3 +41,4 @@ sub gna4 {
 	ok( error("An error occured here") );
 }
 gna;
+ok( ! Log(6,"plop") );

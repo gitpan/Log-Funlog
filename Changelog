@@ -1,17 +1,19 @@
 vim600: set textwidth=80:
 
-korsani@free.fr
-
 Some revisions were not posted on CPAN; they were "internal"
 
+ 0.82_1
+ - README Updated
+ 
  0.82		27/12/2004
+ - Numbering change so that it conforms to perl usage, and you can say:
+ 	use Log::Funlog 0.82;
 
- - Numbering change so that it conforms to perl usage (and you can say use
- Log::Funlog 0.82)
-
- - You can now say verbose => 'n/m' and n can be 'max'. What for? In case of n
- is an option of the command line, and you the max debug level: you don't have
- to remember what is the max debug level, just say 'max' :)
+ - You can now say:
+ 	verbose => 'n/m',
+ and n can be 'max'. What for? In case of n is an option of the command line,
+ and you the max debug level: you don't have to remember what is the max debug
+ level, just say 'max' :)
 
  0.8.1.1	21/12/2004
  - Doc update
@@ -19,7 +21,7 @@ Some revisions were not posted on CPAN; they were "internal"
  0.8.1.0	17/12/2004
  - Same as below
  
- 0.8.0.5	15/12/2004	
+ 0.8.0.5	15/12/2004
  - 'caller' now accept 'last', and a number n. Il will respectively print the last
  call and the last n call(s).
  - If this number is negative, it will print the n first calls.
