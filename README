@@ -1,28 +1,36 @@
 Log::Funlog - Log with fun!
+$Header: /var/cvs/sources/Funlog/README,v 1.4 1988/01/01 03:10:09 gab Exp $
 
 Easy to use and funny log module :P
 
-Features:
+* Features:
 - Log level (verbosity, as much as you want)
 - Logging to stderr or file (as you want)
 - Print stack of calling subs (if you want)
 - Customizable prefix (okay, almost :) )
 - Quite fast
-- Fun include (if you want! )
+- Fun included (if you want! )
 
-Install
+Feel free to modify this module to your convenience.
+
+Gab
+korsani@free.fr
+
+
+* Install
 ------------------------------------
 perk Makefile.PL
 make
 (make test)
 sudo make install
 
-Use
+* Use
 ------------------------------------
 Simple way:
 use Log::Funlog;
-*Log=Log::Funlog->new(levelmax => 5,	#Loglevel max: 5
-	verbose => 3)						#verbose 3
+*Log=Log::Funlog->new(
+	levelmax => 5,	#Loglevel max: 5
+	verbose => 3);						#verbose 3
 Log(1,"plop");
 
 Complicated way (example):

@@ -1,157 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.8 2004/07/27 00:56:42 gab Exp $
-
-package Log::Funlog;
-
-BEGIN {
-	use Exporter;
-	@ISA=qw(Exporter);
-	@EXPORT=qw( );
-	@EXPORT_OK=qw( error );
-	$VERSION='0.7.2.1';
-}
-use Carp;
-#use Sys::Syslog;
-@fun=<DATA>;                                    #>pc<
-chomp @fun;                                     #>pc<
-$count=0;
-
-sub new {
-	shift;
-	%args=@_;
-	if (defined $args{daemon}) {
-		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
-	}
-	croak "'levelmax' missing" unless (defined $args{levelmax});
-	#croak "Manque 'daemon'" unless (defined $args{daemon});
-	croak "'verbose' missing" unless (defined $args{verbose});
-	croak "verbose > levelmax (which value is $args{levelmax})" if ($args{verbose} > $args{levelmax});
-	croak "0<=fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<0));                   #>pc<
-	$error_header='## Oops! ##' unless (defined $args{error_header});
-#	open($logh,">>$args{file}") or croak "$!" if ($daemon);
-	if ($args{prog}) {
-		$prog=`basename $0`;
-		chomp $prog;
-	}
-
-	#&wr($args{levelmax},"Fun activated!") if ($args{fun});
-	return \&wr;					#Ruse de sioux: retourne l'adresse de la fonction de log
-}
-sub wr {
-	my $level=shift;						#Niveau de log
-	return if ($level > $args{verbose} or $level == 0);	#Sort si la 'verbosité' du messages et plus grande que celle voulue
-	my $LOCK_SH=1;
-	my $LOCK_EX=2;
-	my $LOCK_NB=4;
-	my $LOCK_UN=8;
-	if ($args{daemon}) {					#Si on est censé être un démon, on écrit dans le fichier
-		open(LOG,">>$args{file}") or croak "$!";
-		select LOG;
-		flock LOG, $LOCK_EX;
-	} else {								#Sinon, dans STDERR
-		select STDERR;
-	}
-#
-#	Si on est censé être un démon, on écrit dans le fichier
-
-	my $logstring;
-	$logstring=scalar localtime if defined $args{date};
-#	Nom du programme
-	$logstring.=" [ ".$prog." ]" if defined $prog;
-#	Niveau de Log
-	$logstring.=" [ ".$args{cosmetic} x $level. " " x ($args{levelmax} - $level)." ]" if defined $args{cosmetic};
-	$logstring.=" " if ($logstring ne "");
-	if ($args{'caller'}) {			#arf! trop forte, cette commande!
-		if ($args{'caller'} eq "all") {			#si on demande tout les appels
-			$i=1;
-			while ($tmp=(caller($error?$i+1:$i))[3]) {	#on tournicote tant qu'il y en a
-				$caller.=$tmp."/";
-				$i++;
-			};
-		} else {
-			$caller=(caller($error?2:1))[3];			#sinon on ne chope que le dernier
-		}
-		if ($caller) {								#si on a eu des résultats (ce qui n'est pas évident si on est dans main)
-			$caller=~s/main\:\://g;
-			my @a=split(/\//,$caller);
-			@a=reverse @a;
-			$logstring.="{".join(':',@a)."}"." ";
-		}
-		undef $caller;
-	}
-	print $logstring;					#Et hop, on affiche le début
-	while (my $tolog=shift) {			#tant qu'il y a des trucs sur la ligne
-		print $tolog;
-	}
-	print "\n";
-#   Passe le fun autour de toi!                             #>pc<
-    print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));		#>pc<
-																				#pas dans les 10 1ères lignes
-	close LOG if ($args{daemon});
-	select(STDOUT);
-	$count++;
-	return 1;
-}
-sub error {
-	$error=1;
-	wr(1,$error_header," ",@_);
-	return 1;
-}
-1;
-__DATA__
--- this line will never be written --
-Pfiou... marre de logger, moi
-J'ai faim!
-Je veux faire pipi!
-Dis, t'as pensé à manger?
-Fait froid, dans ce process, non?
-Fait quel temps, dehors?
-Aller, pastis time!
-Je crois que je suis malade...
-Dis, tu peux me choper un sandwich?
-On se fait une toile?
-Aller, décolle un peu de l'écran
-Tu fais quoi ce soir, toi?
-On va en boîte?
-Pousse-toi un peu, je vois rien
-Vivement les vacances...
-Mince, j'ai pas prévenu ma femme que je finissais tard...
-Il est chouette ton projet?
-Bon, il est bientôt finit, ce process??
-Je m'ennuie...
-Tu peux me mettre la télé?
-Y a quoi ce soir?
-J'irais bien faire un tour à Pigalle, moi.
-Et si je formattais le disque?
-J'me ferais bien le tour du monde...
-Je crois que je suis homosexuel...
-Bon, je m'en vais, j'ai des choses à faire.
-Et si je changeais de taf? OS, c'est mieux que script, non?
-J'ai froid!
-J'ai chaud!
-Tu me prend un café?
-T'es plutôt chien ou chat, toi?
-Je crois que je vais aller voir un psy...
-Tiens, 'longtemps que j'ai pas eu de news de ma soeur!
-Comment vont tes parents?
-Comment va Arthur, ton poisson rouge?
-Ton chien a finit de bouffer les rideaux?
-Ton chat pisse encore partout?
-Tu sais ce que fait ta fille, là?
-T'as pas encore claqué ton chef?
-Toi, tu t'es engueulé avec ta femme, ce matin...
-T'as les yeux en forme de contener. Soucis?
-Et si je partais en boucle infinie?
-T'es venu à pied?
-Et si je veux pas exécuter la prochaine commande?
-Tiens, je vais me transformer en virus...
-Ca t'en bouche un coin, un script qui parle, hein?
-Ah m...., j'ai oublié les clés à l'intérieur de la voiture...
-T'as pas autre chose à faire, là?
-Ca devient relou...
-T'as pensé à aller voir un psy?
-Toi, tu pense à changer de job...
-
-__END__
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.12 1988/01/01 03:10:09 gab Exp $
 
 =head1 NAME
 
@@ -334,9 +181,11 @@ The I wrote this module, that I 'use Funlog' in each of my scripts.
  0.7.1		21/07/2004	: Minor (cosmetic) bug fixes
  0.7.2		23/07/2004	: There is now the name of all calling subs if you specify caller => 'all'
  						: Added to CPAN :)
- 0.7.2.1	23/07/2004	: Doc moved to bottom
- 						: README added
+ 0.7.2.1	23/07/2004	: README added
+ 						: Doc moved to bottom
 						: Do not write anything if you log with priority 0
+ 0.7.2.2	29/07/2004	: Doc moved to top :)
+ 0.7.2.3	13/08/2004	: "TODO" added to the pack
  
 										 
 =head1 AUTHOR
@@ -347,9 +196,158 @@ korsani@free.fr
 
 =head1 LICENCE
 
-GPL, of course!
+GPL
 
-If you have comments, or if you (want to) add some features, PLEASE let me know!
+Let me know if you have added some features, or removed some bugs ;)
 
 =cut
+
+package Log::Funlog;
+
+BEGIN {
+	use Exporter;
+	@ISA=qw(Exporter);
+	@EXPORT=qw( );
+	@EXPORT_OK=qw( error );
+	$VERSION='0.7.2.3';
+}
+use Carp;
+use strict;
+#use Sys::Syslog;
+@fun=<DATA>;
+chomp @fun;
+$count=0;
+
+sub new {
+	shift;
+	%args=@_;
+	if (defined $args{daemon}) {
+		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
+	}
+	croak "'levelmax' missing" unless (defined $args{levelmax});
+	#croak "Manque 'daemon'" unless (defined $args{daemon});
+	croak "'verbose' missing" unless (defined $args{verbose});
+	croak "verbose > levelmax (which value is $args{levelmax})" if ($args{verbose} > $args{levelmax});
+	croak "0<=fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<0));                   #>pc<
+	$error_header='## Oops! ##' unless (defined $args{error_header});
+	if ($args{prog}) {
+		$prog=`basename $0`;
+		chomp $prog;
+	}
+
+	return \&wr;					#Ruse de sioux: retourne l'adresse de la fonction de log
+}
+sub wr {
+	my $level=shift;						#Niveau de log
+	return if ($level > $args{verbose} or $level == 0);	#Sort si la 'verbosité' du messages et plus grande que celle voulue
+	my $LOCK_SH=1;
+	my $LOCK_EX=2;
+	my $LOCK_NB=4;
+	my $LOCK_UN=8;
+	if ($args{daemon}) {					#Si on est censé être un démon, on écrit dans le fichier
+		open(LOG,">>$args{file}") or croak "$!";
+		select LOG;
+		flock LOG, $LOCK_EX;
+	} else {								#Sinon, dans STDERR
+		select STDERR;
+	}
+	my $logstring;
+# 	Date
+	$logstring=scalar localtime if defined $args{date};
+#	Nom du programme
+	$logstring.=" [ ".$prog." ]" if defined $prog;
+#	Niveau de Log
+	$logstring.=" [ ".$args{cosmetic} x $level. " " x ($args{levelmax} - $level)." ]" if defined $args{cosmetic};
+	$logstring.=" " if ($logstring ne "");
+	if ($args{'caller'}) {			#arf! trop forte, cette commande!
+		if ($args{'caller'} eq "all") {			#si on demande tout les appels
+			$i=1;
+			while ($tmp=(caller($error?$i+1:$i))[3]) {	#on tournicote tant qu'il y en a
+				$caller.=$tmp."/";
+				$i++;
+			};
+		} else {
+			$caller=(caller($error?2:1))[3];			#sinon on ne chope que le dernier
+		}
+		if ($caller) {								#si on a eu des résultats (ce qui n'est pas évident si on est dans main)
+			$caller=~s/main\:\://g;
+			my @a=split(/\//,$caller);
+			@a=reverse @a;
+			$logstring.="{".join(':',@a)."}"." ";
+		}
+		undef $caller;
+	}
+	print $logstring;					#Et hop, on affiche le début
+	while (my $tolog=shift) {			#tant qu'il y a des trucs sur la ligne
+		print $tolog;
+	}
+	print "\n";
+#   Passe le fun autour de toi!
+    print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#pas dans les 10 1ères lignes
+	close LOG if ($args{daemon});
+	select(STDOUT);
+	$count++;
+	return 1;
+}
+sub error {
+	$error=1;
+	wr(1,$error_header," ",@_);
+	return 1;
+}
+1;
+__DATA__
+-- this line will never be written --
+Pfiou... marre de logger, moi
+J'ai faim!
+Je veux faire pipi!
+Dis, t'as pensé à manger?
+Fait froid, dans ce process, non?
+Fait quel temps, dehors?
+Aller, pastis time!
+Je crois que je suis malade...
+Dis, tu peux me choper un sandwich?
+On se fait une toile?
+Aller, décolle un peu de l'écran
+Tu fais quoi ce soir, toi?
+On va en boîte?
+Pousse-toi un peu, je vois rien
+Vivement les vacances...
+Mince, j'ai pas prévenu ma femme que je finissais tard...
+Il est chouette ton projet?
+Bon, il est bientôt finit, ce process??
+Je m'ennuie...
+Tu peux me mettre la télé?
+Y a quoi ce soir?
+J'irais bien faire un tour à Pigalle, moi.
+Et si je formattais le disque?
+J'me ferais bien le tour du monde...
+Je crois que je suis homosexuel...
+Bon, je m'en vais, j'ai des choses à faire.
+Et si je changeais de taf? OS, c'est mieux que script, non?
+J'ai froid!
+J'ai chaud!
+Tu me prend un café?
+T'es plutôt chien ou chat, toi?
+Je crois que je vais aller voir un psy...
+Tiens, 'longtemps que j'ai pas eu de news de ma soeur!
+Comment vont tes parents?
+Comment va Arthur, ton poisson rouge?
+Ton chien a finit de bouffer les rideaux?
+Ton chat pisse encore partout?
+Tu sais ce que fait ta fille, là?
+T'as pas encore claqué ton chef?
+Toi, tu t'es engueulé avec ta femme, ce matin...
+T'as les yeux en forme de contener. Soucis?
+Et si je partais en boucle infinie?
+T'es venu à pied?
+Et si je veux pas exécuter la prochaine commande?
+Tiens, je vais me transformer en virus...
+Ca t'en bouche un coin, un script qui parle, hein?
+Ah m...., j'ai oublié les clés à l'intérieur de la voiture...
+T'as pas autre chose à faire, là?
+Ca devient relou...
+T'as pensé à aller voir un psy?
+Toi, tu pense à changer de job...
+
+__END__
 

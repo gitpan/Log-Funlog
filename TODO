@@ -1,0 +1,2 @@
+- Customizable fun messages. Should it be an option with Funlog->new ? Should it be choosen at compile time?
+- Politically correct version (with no code related to fun). Made with a diff? Modulable code compiled? ("make pc ? perl Makefile.PL --pc?")
