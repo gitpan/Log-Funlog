@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.15 2004/09/22 18:06:25 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.18 2004/09/29 09:04:16 gab Exp $
 
 =head1 NAME
 
@@ -26,9 +26,9 @@ When you want to log something, just write:
 
  your-sub-log(priority,"what"," I ","wanna log")
 
-then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If it is, your log will be written with the format you decided.
+then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
 
-L<Funlog.pm> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
+L<Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
 
 Parameters are: L<B<header>>, L<B<error_header>>, L<B<cosmetic>>, L<B<verbose>>, L<B<file>>, L<B<daemon>>, L<B<fun>> and L<B<caller>>
 
@@ -36,7 +36,7 @@ L<B<verbose>> is mandatory.
 
 I<NOTE NOTE NOTE>: Interface (B<header>) is subject to change!
 
-=head2 MANDATORIES OPTION
+=head2 MANDATORY OPTION
 
 =over
 
@@ -46,7 +46,7 @@ Should be of the form 'B<n>/B<m>', where B<n><B<m>.
 
 B<n> is the wanted verbosity of your script, B<m> if the maximum verbosity of your script.
 
-Everything that is logged with a priority more than B<n>will not be logged.
+Everything that is logged with a priority more than B<n> will not be logged.
 
 0 if you do not want anything to be printed (??? what for ???)
 
@@ -62,6 +62,8 @@ The common way to define B<n> is to take it from the command line with Getopt:
 	)
 
 This option is backward compatible with 0.7.x.x versions.
+
+See L<EXAMPLES>
 
 =back
 
@@ -84,9 +86,9 @@ The B<letter> is, for now:
 
 B<delimiter> is what you want, but MUST BE one character long (replacement regexp is s/\%<letter>(.?)(.?)<letter>/$1<field>$2/ ). B<delimiter1> will be put before the field once expanded, B<delimiter2> after.
 
-Example: '%dd %p::p %l[]l %s{}s ' should produce something like:
+Example: '%dd %p::p hey %l[]l %s{}s ' should produce something like:
 
- Wed Sep 22 18:50:34 2004 :gna.pl: [x    ] {sub1} Something happened
+ Wed Sep 22 18:50:34 2004 :gna.pl: hey [x    ] {sub1} Something happened
 
 If no header is specified, no header will be written, and you would have:
 
@@ -110,10 +112,6 @@ File to write logs to.
 
 MUST be specified if you specify B<daemon>
 
-1 if you want the current date being printed in the logs.
-
-The date is printed like: Thu Aug 14 13:56:56 2003
-
 =item B<cosmetic>
 
 An alphanumeric char to indicate the log level in your logs.
@@ -124,7 +122,7 @@ Should be something like 'x', or '*', or '!', but actually no test are performed
 
 =item B<error_header>
 
-Header you want to see in the logs when you call the B<error> function.
+Header you want to see in the logs when you call the B<error> function (if you import it, of course)
 
 Default is '## Oops! ##'.
 
@@ -154,12 +152,12 @@ Here is an example with almost all of the options enabled:
  use Log::Funlog qw( error );
  *Log=Log::Funlog->new(
 		file => "zou.log",		#name of the file
-		verbose => "3/5",			#verbose 3 out of 5
+		verbose => "3/5",			#verbose 3 out of a maximum of 5
 		daemon => 0,			#I am not a daemon
 		cosmetic => 'x',		#crosses for the level
 		fun => 10,			#10% of fun (que je passe autour de moi)
 		error_header => 'Groumpf... ',  #Header for true errors
-		header => '%d [ %p ] [ %l ] ',	#The header
+		header => '%dd %p[]p %l[] ',	#The header
 		caller => 1);			#and I want the name of the last sub
 
  Log(1,"I'm logged...");
@@ -221,7 +219,7 @@ korsani@free.fr
 
 =head1 LICENCE
 
-GPL
+As Perl itself.
 
 Let me know if you have added some features, or removed some bugs ;)
 
@@ -234,7 +232,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.8.0.1';
+	$VERSION='0.8.0.2';
 }
 use Carp;
 use strict;
@@ -262,7 +260,7 @@ sub new {
 	croak "'verbose' should be of the form 'n/m', where n<=m, which not seem to be the case: $args{verbose} > $args{levelmax}" if ($args{verbose} > $args{levelmax});
 	croak "0<fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<=0));                   #>pc<
 	$error_header=defined $args{error_header} ? $args{error_header} : '## Oops! ##';
-	
+	$args{cosmetic}='x' if (not defined $args{cosmetic});
 	$me=`basename $0`;
 	chomp $me;
 
@@ -298,8 +296,8 @@ sub wr {
 #	Niveau de Log
 	if (defined $args{cosmetic}) {
 		$tmp=$args{cosmetic} x $level. " " x ($args{levelmax} - $level);
-		$header=~s/\%l(.?)(.?)l/$1$tmp$2/;
 	}
+	$header=~s/\%l(.?)(.?)l/$1$tmp$2/;
 	$logstring.=" " if ((defined $logstring) and ($logstring ne ""));
 	if ($args{'caller'}) {						#if the user want the call stack
 		my $caller;
@@ -322,7 +320,10 @@ sub wr {
 			$header=~s/\%s.?.?s//;
 		}
 		undef $caller;
+	} else {
+		$header=~s/\%s.?.?s//;
 	}
+		
 #####################################
 #	End oh header building
 #####################################

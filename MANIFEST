@@ -1,4 +1,4 @@
-#$Header: /var/cvs/sources/Funlog/MANIFEST,v 1.6 2004/09/02 15:26:02 gab Exp $
+#$Header: /var/cvs/sources/Funlog/MANIFEST,v 1.7 2004/09/23 15:31:27 gab Exp $
 MANIFEST
 MANIFEST.SKIP
 lib/Log/Funlog.pm
@@ -9,4 +9,5 @@ t/test.t
 README
 TODO
 Changelog
+Copying
 META.yml                                 Module meta-data (added by MakeMaker)
