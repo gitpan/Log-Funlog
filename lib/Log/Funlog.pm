@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.13 2004/09/01 17:42:11 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.15 2004/09/22 18:06:25 gab Exp $
 
 =head1 NAME
 
@@ -22,41 +22,84 @@ It should be easy to use, and provide all the functions you should want.
 
 Just initialise the module, then use is as if it was an ordinary function!
 
-When you want to log something, just write your-sub-log(priority,"what I wanna log"), then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If it is, your log will be written with the format you decided.
+When you want to log something, just write:
+
+ your-sub-log(priority,"what"," I ","wanna log")
+
+then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If it is, your log will be written with the format you decided.
 
 L<Funlog.pm> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
 
-=head2 Mandatories options
+Parameters are: L<B<header>>, L<B<error_header>>, L<B<cosmetic>>, L<B<verbose>>, L<B<file>>, L<B<daemon>>, L<B<fun>> and L<B<caller>>
+L<B<levelmax>> and L<B<verbose>> are mandatory.
+
+I<NOTE NOTE NOTE>: Interface (B<header>) is subject to change!
+
+=head2 MANDATORIES OPTION
 
 =over
 
 =item B<levelmax>
 
-Max log level
+Maximum log level you want. Should be something like 3, maybe 5.
 
 =item B<verbose>
 
-Verbosity of the script calling Funlog.pm
+Verbosity of your script. Everything that is logged with a priority more than this will not be logged.
 
 0 if you do not want anything to be printed (??? what for ???)
 
+The common way to define B<verbose> is to take it from the command line with Getopt:
+
+ use Getopt::Long;
+ use Log::Funlog;
+ &GetOptions("verbose",\$verbose);
+ *Log=Log::Funlog(
+	[...]
+	verbose => $verbose,
+	[...]
+	)
+
+
 MUST be less or equal to B<levelmax> or the module will complain.
 
-Everything that is logged with a priority more than this will not be logged.
-	
+
 =back
 
-=head2 Non-mandatories options:
+=head2 NON MANDATORIES OPTIONS
 
 =over
+
+=item B<header>
+
+Pattern specifying the header of your logs.
+
+The fields are:
+
+	%s: stack of the calling sub
+	%d: date
+	%p: name of the prog
+	%l: verbosity level
+
+Example: '%d :%p: [ %l ] {%s} ' should produce something like:
+
+ Wed Sep 22 18:50:34 2004 :gna.pl: [ x     ] {sub1} Something happened
+
+If no header is specified, no header will be written, and you would have:
+
+ Something happened
+
+I<NOTE NOTE NOTE>: The fields are subject to change!
 
 =item B<daemon>
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
-When B<daemon>=1, Funlog.pm write to B<file> instead of B<STDERR>
+When B<daemon>=1, Log::Funlog write to B<L<file>> instead of B<STDERR>
 
-If you specify B<daemon>, you must specify B<file>
+If you specify B<daemon>, you must specify B<L<file>>
+
+The common way to do is the same that with B<L<verbose>>: with Getopt
 
 =item B<file>
 
@@ -64,21 +107,16 @@ File to write logs to.
 
 MUST be specified if you specify B<daemon>
 
-=item B<date>
-
 1 if you want the current date being printed in the logs.
 
 The date is printed like: Thu Aug 14 13:56:56 2003
 
-=item B<prog>
-
-1 if you want the name of the script ($0) being printed in the logs.
-
 =item B<cosmetic>
-
 An alphanumeric char you want to see in the logs.
 
 There will be as many as these chars as the loglevel of the string being logged.
+
+Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
 
 =item B<error_header>
 
@@ -95,10 +133,11 @@ Should be: 0<fun<=100
 See the sources of Funlog.pm if you want to change the sentences
 
 =item B<caller>
-
-1 if you want the name of the subroutine being logged.
+1 if you want the name of the subroutine which is logging.
 
 'all' if you want the stack of subs
+
+Of course, nothing will happen if no B<header> is specified, nor %s in the B<header> ...
 
 =back
 
@@ -107,37 +146,37 @@ See the sources of Funlog.pm if you want to change the sentences
 Here is an example with almost all of the options enabled:
 
  $ vi gna.pl
+ #!/usr/bin/perl -w
  use Log::Funlog qw( error );
- *Log=Log::Funlog->new(levelmax => 5,	#Loglevel max: 5
- 	file => "zou.log",			#name of the file
-	verbose => 3,				#verbose 3
-	daemon => 0,				#I (gna.pl) am not a daemon
-	prog => 1,				#I want the name of the progs
-	date => 1,				#and the date too
-	cosmetic => 'x',				#crosses for the level
-	fun => 10,              #10% of fun (que je passe autour de moi)
-	error_header => 'Groumpf... ',	#Header for true errors
-	caller => 1);				#and I want the name of the sub
+ *Log=Log::Funlog->new(levelmax => 5,		#Loglevel max: 5
+		file => "zou.log",		#name of the file
+		verbose => 3,			#verbose 3
+		daemon => 0,			#I am not a daemon
+		cosmetic => 'x',		#crosses for the level
+		fun => 10,			#10% of fun (que je passe autour de moi)
+		error_header => 'Groumpf... ',  #Header for true errors
+		header => '%d [ %p ] [ %l ] ',	#The header
+		caller => 1);			#and I want the name of the last sub
 
- [ ... some code ... ]
  Log(1,"I'm logged...");
  Log(3,"Me too...");
- Log(4,"Me not!");			#because 4>verbose
- sub ze-sub {
-		 $hop=1;
-		 Log(1,"One","two",$hop,"C"."++");
-		 error("oups!");
+ Log(4,"Me not!");          #because 4>verbose
+ sub ze_sub {
+	$hop=1;
+	Log(1,"One","two",$hop,"C"."++");
+	error("oups!");
  }
- ze-sub;
+ ze_sub;
  error("Zut");
+ 
  :wq
  
  $ ./gna.pl
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] I'm logged...
- Thu Aug 14 13:56:56 2003 [ gna ] [ xxx   ] Me too...
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] {ze-sub} Onetwo1C++
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] {ze-sub} Groumpf... oups!
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] Groumpf... Zut
+ Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] I'm logged...
+ Wed Sep 22 18:50:34 2004 [ gna.pl ] [ xxx   ] Me too...
+ Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Onetwo1C++
+ Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Groumpf...  oups!
+ Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Groumpf...  Zut
 
 =head1 DISCUSSION
 
@@ -159,38 +198,12 @@ As I didn't found it on the web, and I wanted something more 'personnal' than sy
 
 As I copied this routine, I added some stuff to match my needs; I wanted something rather fast, easy to use, easy to understand (even for me :P ), quite smart and ... a little bit funny :)
 
-The I wrote this module, that I 'use Funlog' in each of my scripts.
+The I wrote this module, that I 'use Log::Funlog' in each of my scripts.
 
 =head1 CHANGELOG
 
- 0.2					: Print to STDERR instead of STDOUT
- 0.3					: 'daemon' argument no more mandatory: false when not specified
- 0.4					: 'fun' option added, and not mandatory (I think it should :P)
- 0.5		08/08/2003 	: Lock of the log file, so the module can be used in forks and threads, without smashing
- 						: the log file
- 0.6		14/08/2003 	: 'caller' option added
- 0.6.1		18/08/2003	: This doc added :P
- 0.6.2		06/01/2004	: My mail address changed
-						: {} around the name of the sub
- 0.6.3		16/02/2004	: Fix a bug that garble logs if you don't chose 'date' option
- 0.7.0		20/02/2004	: 'error' function added.
- 						: Doc updated.
-						: 'file' option was written not mandatory, but it complained if you didn't supply it
-						: Doc fixed 'bout the {} around the name of the sub
-						: Wiped the ':' after the name of the subs
- 0.7.1		21/07/2004	: Minor (cosmetic) bug fixes
- 0.7.2		23/07/2004	: There is now the name of all calling subs if you specify caller => 'all'
- 						: Added to CPAN :)
- 0.7.2.1	23/07/2004	: README added
- 						: Doc moved to bottom
-						: Do not write anything if you log with priority 0
- 0.7.2.2	29/07/2004	: Doc moved to top :)
- 0.7.2.3	13/08/2004	: "TODO" added to the pack
- 0.7.2.4	01/09/2004	: Use of bless (I guess it looks better at perl's guru's eyes)
-						: use strict :D
-						: Comments now in english
- 
-										 
+See Changelog
+
 =head1 AUTHOR
 
 Gabriel Guillon
@@ -212,7 +225,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.7.2.4';
+	$VERSION='0.8.0.0';
 }
 use Carp;
 use strict;
@@ -220,7 +233,7 @@ use strict;
 my @fun=<DATA>;
 chomp @fun;
 my $count=0;
-use vars qw( %args $prog $error_header $error);
+use vars qw( %args $me $error_header $error);
 sub new {
 	my $this = shift;
 	my $class = ref($this) || $this;
@@ -233,12 +246,10 @@ sub new {
 	croak "'verbose' missing" unless (defined $args{verbose});
 	croak "verbose > levelmax (which value is $args{levelmax})" if ($args{verbose} > $args{levelmax});
 	croak "0<=fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<0));                   #>pc<
-	$error_header='## Oops! ##' unless (defined $args{error_header});
+	$error_header=defined $args{error_header} ? $args{error_header} : '## Oops! ##';
 	
-	if ($args{prog}) {
-		$prog=`basename $0`;
-		chomp $prog;
-	}
+	$me=`basename $0`;
+	chomp $me;
 
 	my $self = \&wr;
 	bless $self, $class;
@@ -263,13 +274,18 @@ sub wr {
 #####################################
 	
 	my $logstring;
+	my $header=defined $args{header} ? $args{header} : "";
 # 	Date
-	$logstring=scalar localtime if defined $args{date};
+	my $tmp=scalar localtime;
+	$header=~s/\%d/$tmp/;
 #	Nom du programme
-	$logstring.=" [ ".$prog." ]" if defined $prog;
+	$header=~s/\%p/$me/;
 #	Niveau de Log
-	$logstring.=" [ ".$args{cosmetic} x $level. " " x ($args{levelmax} - $level)." ]" if defined $args{cosmetic};
-	$logstring.=" " if ($logstring ne "");
+	if (defined $args{cosmetic}) {
+		$tmp=$args{cosmetic} x $level. " " x ($args{levelmax} - $level);
+		$header=~s/\%l/$tmp/;
+	}
+	$logstring.=" " if ((defined $logstring) and ($logstring ne ""));
 	if ($args{'caller'}) {						#if the user want the call stack
 		my $caller;
 		if ($args{'caller'} eq "all") {			#if the user want ALL the call stack
@@ -285,7 +301,10 @@ sub wr {
 			$caller=~s/main\:\://g;
 			my @a=split(/\//,$caller);
 			@a=reverse @a;
-			$logstring.="{".join(':',@a)."}"." ";
+			my $tmp=join(':',@a);
+			$header=~s/\%s/$tmp/;
+		} else {
+			$header=~s/\%s//;
 		}
 		undef $caller;
 	}
@@ -293,7 +312,8 @@ sub wr {
 #	End oh header building
 #####################################
 
-	print $logstring;					#print the header
+	print $header if (defined $header);					#print the header
+	print $logstring if (defined $logstring);
 	while (my $tolog=shift) {			#and then print all the things the user wants me to print
 		print $tolog;
 	}

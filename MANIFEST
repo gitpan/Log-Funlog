@@ -1,4 +1,4 @@
-#$Header: /var/cvs/sources/Funlog/MANIFEST,v 1.5 2004/08/13 15:51:01 gab Exp $
+#$Header: /var/cvs/sources/Funlog/MANIFEST,v 1.6 2004/09/02 15:26:02 gab Exp $
 MANIFEST
 MANIFEST.SKIP
 lib/Log/Funlog.pm
@@ -8,4 +8,5 @@ misc/makepc.pl
 t/test.t
 README
 TODO
+Changelog
 META.yml                                 Module meta-data (added by MakeMaker)

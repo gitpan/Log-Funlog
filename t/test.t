@@ -4,12 +4,11 @@ use Log::Funlog qw( error );
 *Log=Log::Funlog->new(levelmax => 5,
 	file => "zou.log",
 	verbose => 5,
-#	prog => 1,
-#	fun => 10,
+	fun => 10,
 	cosmetic => '*',
-#	date => 1,
 	fun => 50,
-	caller => 1
+	caller => 'all',
+	header => ' %d %p /%l/ {%s} '
 );
 for ($j=1;$j<=5;$j++) {
 	ok( Log($j,"Log level $j") );
