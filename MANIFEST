@@ -1,0 +1,9 @@
+#$Header: /var/cvs/sources/Funlog/MANIFEST,v 1.2 2004/06/23 11:10:00 gab Exp $
+MANIFEST
+MANIFEST.SKIP
+lib/Log/Funlog.pm
+Makefile.PL
+misc/LogPC.pm
+misc/makepc.pl
+t/test.t
+META.yml                                 Module meta-data (added by MakeMaker)
