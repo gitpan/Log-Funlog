@@ -4,6 +4,15 @@ korsani@free.fr
 
 Some revisions were not posted on CPAN; they were "internal"
 
+ 0.82		27/12/2004
+
+ - Numbering change so that it conforms to perl usage (and you can say use
+ Log::Funlog 0.82)
+
+ - You can now say verbose => 'n/m' and n can be 'max'. What for? In case of n
+ is an option of the command line, and you the max debug level: you don't have
+ to remember what is the max debug level, just say 'max' :)
+
  0.8.1.1	21/12/2004
  - Doc update
 

@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.34 2004/12/22 00:19:59 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.39 2004/12/27 16:52:51 gab Exp $
 
 =head1 NAME
 
@@ -44,11 +44,11 @@ B<NOTE NOTE NOTE>: Interface (L</header>) is subject to change!
 
 =item B<verbose>
 
-In the form B<n>/B<m>, where B<n><B<m>.
+In the form B<n>/B<m>, where B<n><B<m> or B<n>=max.
 
 B<n> is the wanted verbosity of your script, B<m> if the maximum verbosity of your script.
 
-Everything that is logged with a priority more than B<n> will not be logged.
+Everything that is logged with a priority more than B<n> (in case B<n> is numeric)  will not be logged.
 
 0 if you do not want anything to be printed.
 
@@ -56,12 +56,14 @@ The common way to define B<n> is to take it from the command line with Getopt:
 
  use Getopt::Long;
  use Log::Funlog;
- &GetOptions("verbose",\$verbose);
+ &GetOptions("verbose=s",\$verbose);
  *Log=new Log::Funlog(
 	[...]
 	verbose => "$verbose/5",
 	[...]
 	)
+
+In this case, you can say --verbose=max so that it will log with the max verbosity level available (5, here)
 
 This option is backward compatible with 0.7.x.x versions.
 
@@ -182,11 +184,11 @@ Here is an example with almost all of the options enabled:
  :wq
  
  $ ./gna.pl
- Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] I'm logged...
- Wed Sep 22 18:50:34 2004 [ gna.pl ] [ xxx   ] Me too...
- Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Onetwo1C++
- Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Groumpf...  oups!
- Wed Sep 22 18:50:34 2004 [ gna.pl ] [ x     ] Groumpf...  Zut
+ Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] I'm logged...
+ Wed Sep 22 18:50:34 2004 [gna.pl] [xxx  ] Me too...
+ Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] Onetwo1C++
+ Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] Groumpf...  oups!
+ Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] Groumpf...  Zut
 
 
 =head1 BUGS
@@ -221,7 +223,7 @@ See Changelog
 
 =head1 AUTHOR
 
-Gabriel Guillon
+Gabriel Guillon, from Chashew team
 
 korsani-spam@free-spam.fr-spam
 
@@ -242,7 +244,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.8.1.1';
+	$VERSION=0.82_0;
 }
 use Carp;
 use strict;
@@ -261,9 +263,10 @@ sub new {
 	if (defined $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
-	croak "'verbose' should be of the form n/m" if ($args{'verbose'} !~ /^\d+\/\d+$/);
+	croak "'verbose' should be of the form n/m or max/m" if (($args{'verbose'} !~ /^\d+\/\d+$/) and ($args{'verbose'} !~ /^max\/\d+$/));
 	my ($verbose,$levelmax)=split('/',$args{verbose});
 	$levelmax=$levelmax ? $levelmax : "";						#in case it is not defined...
+	$verbose=$levelmax if ($verbose =~ /^max$/);
 	if (($verbose !~ /\d+/) or ($levelmax !~ /\d+/)) {
 		warn "Arguments in 'verbose' should be of the form n/m, where n and m are numerics.\nAs this is a new feature, I'll assume you didn't upgraded your script so I'll make it compatible...\nAnyhow, consider upgrading soon!\n";
 		croak "No 'levelmax' provided" unless ($args{levelmax});
@@ -401,7 +404,7 @@ Pousse-toi un peu, je vois rien
 Vivement les vacances...
 Mince, j'ai pas prévenu ma femme que je finissais tard...
 Il est chouette ton projet?
-Bon, il est bientôt finit, ce process??
+Bon, il est bientôt fini, ce process??
 Je m'ennuie...
 Tu peux me mettre la télé?
 Y a quoi ce soir?
@@ -419,7 +422,7 @@ Je crois que je vais aller voir un psy...
 Tiens, 'longtemps que j'ai pas eu de news de ma soeur!
 Comment vont tes parents?
 Comment va Arthur, ton poisson rouge?
-Ton chien a finit de bouffer les rideaux?
+Ton chien a fini de bouffer les rideaux?
 Ton chat pisse encore partout?
 Tu sais ce que fait ta fille, là?
 T'as pas encore claqué ton chef?
