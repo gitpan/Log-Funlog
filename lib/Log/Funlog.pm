@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.33 2004/12/19 23:19:00 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.34 2004/12/22 00:19:59 gab Exp $
 
 =head1 NAME
 
@@ -242,7 +242,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.8.1.0';
+	$VERSION='0.8.1.1';
 }
 use Carp;
 use strict;

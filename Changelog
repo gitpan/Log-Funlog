@@ -1,51 +1,105 @@
-vim600: set textwidth=0:
+vim600: set textwidth=80:
 
 korsani@free.fr
 
 Some revisions were not posted on CPAN; they were "internal"
- 0.8.1.0	17/12/2004	: Same as below
- 0.8.0.5	15/12/2004	: 'caller' now accept 'last', and a number n. Il will respectively print the last call and the last n call(s).
- 						: If this number is negative, it will print the n first calls
- 						: Now check if 'fun' and 'verbose' are of the correct form
-						: Fix bug that garble the print of the stack call if you called the 'error' func before
- 0.8.0.4	08/12/2004	: Doc bug fix
- 0.8.0.3	30/09/2004	: Doc improvement
- 0.8.0.2	29/09/2004	: Bug fixes: header was garbled is 'cosmetic' or 'caller' were not specified as options but were in header
- 0.8.0.1	22/09/2004	: An other change in the interface: 'verbose' should be of the form n/m. Anyway, it is backward compatible :)
- 0.8.0.0	22/09/2004	: New interface, much more flexible, more compact, but SUBJECT TO CHANGE!!
- 						: No more 'date' and 'prog' option
- 						: Not backward compatible, but your script don't ceased to work :)
- 						: Fix 'error_header' bug
-						: Doc update
-						: No installation type specified: should now compile everywhere
- 0.7.2.5	13/09/2004	: Fix t/test.t according to new syntax of 'caller'
- 						: Installation moved from 'vendor' to 'site
- 0.7.2.4	01/09/2004	: Use of bless (I guess it looks better at perl's guru's eyes)
-						: use strict :D and should compile now
-						: Comments now in english
-						: Fix a bug that occure when no header are specified
-						: Changelog moved to separate file
- 0.7.2.3	13/08/2004	: "TODO" added to the pack
- 0.7.2.2	29/07/2004	: Doc moved to top :)
- 0.7.2.1	23/07/2004	: README added
- 						: Doc moved to bottom
-						: Do not write anything if you log with priority 0
- 0.7.2		23/07/2004	: There is now the name of all calling subs if you specify caller => 'all'
- 						: Added to CPAN :)
- 0.7.1		21/07/2004	: Minor (cosmetic) bug fixes
- 0.7.0		20/02/2004	: 'error' function added.
- 						: Doc updated.
-						: 'file' option was written not mandatory, but it complained if you didn't supply it
-						: Doc fixed 'bout the {} around the name of the sub
-						: Wiped the ':' after the name of the subs
- 0.6.3		16/02/2004	: Fix a bug that garble logs if you don't chose 'date' option
- 0.6.2		06/01/2004	: My mail address changed
-						: {} around the name of the sub
- 0.6.1		18/08/2003	: This doc added :P
- 0.6		14/08/2003 	: 'caller' option added
- 0.5		08/08/2003 	: Lock of the log file, so the module can be used in forks and threads, without smashing
- 						: the log file
- 0.4					: 'fun' option added, and not mandatory (I think it should :P)
- 0.3					: 'daemon' argument no more mandatory: false when not specified
- 0.2					: Print to STDERR instead of STDOUT
+
+ 0.8.1.1	21/12/2004
+ - Doc update
+
+ 0.8.1.0	17/12/2004
+ - Same as below
+ 
+ 0.8.0.5	15/12/2004	
+ - 'caller' now accept 'last', and a number n. Il will respectively print the last
+ call and the last n call(s).
+ - If this number is negative, it will print the n first calls.
+ - Now check if 'fun' and 'verbose' are of the correct form
+ - Fix bug that garble the print of the stack call if you called the 'error' func
+ before.
+ 
+ 0.8.0.4	08/12/2004
+ - Doc bug fix
+ 
+ 0.8.0.3	30/09/2004
+ - Doc improvement
+ 
+ 0.8.0.2	29/09/2004
+ - Bug fixes: header was garbled is 'cosmetic' or 'caller' were not specified as
+ options but were in header.
+ 
+ 0.8.0.1	22/09/2004
+ - An other change in the interface: 'verbose' should be of the form n/m.
+ Anyway, it is backward compatible :)
+ 
+ 0.8.0.0	22/09/2004
+ - New interface, much more flexible, more compact, but SUBJECT TO CHANGE!!
+ - No more 'date' and 'prog' option
+ - Not backward compatible, but your script don't ceased to work :))
+ - Fix 'error_header' bug
+ - Doc update
+ - No installation type specified: should now compile everywhere.
+ 
+ 0.7.2.5	13/09/2004
+ - Fix t/test.t according to new syntax of 'caller'
+ - Installation moved from 'vendor' to 'site
+ 
+ 0.7.2.4	01/09/2004
+ - Use of bless (I guess it looks better at perl's guru's eyes)
+ - use strict :D and should compile now
+ - Comments now in english
+ - Fix a bug that occure when no header are specified
+ - Changelog moved to separate file
+ 
+ 0.7.2.3	13/08/2004
+ - "TODO" added to the pack
+ 
+ 0.7.2.2	29/07/2004
+ - Doc moved to top :)
+ 
+ 0.7.2.1	23/07/2004
+ - README added
+ - Doc moved to bottom
+ - Do not write anything if you log with priority 0
+ 
+ 0.7.2		23/07/2004
+ - There is now the name of all calling subs if you specify caller => 'all'
+ - Added to CPAN :)
+ 
+ 0.7.1		21/07/2004
+ - Minor (cosmetic) bug fixes
+ 
+ 0.7.0		20/02/2004
+ - 'error' function added.
+ - Doc updated.
+ - 'file' option was written not mandatory, but it complained if you didn't
+ supply it.
+ - Doc fixed 'bout the {} around the name of the sub
+ - Wiped the ':' after the name of the subs
+ 
+ 0.6.3		16/02/2004
+ - Fix a bug that garble logs if you don't chose 'date' option.
+ 
+ 0.6.2		06/01/2004
+ - My mail address changed
+ - {} around the name of the sub
+ 
+ 0.6.1		18/08/2003
+ - This doc added :P
+ 
+ 0.6		14/08/2003
+ - 'caller' option added
+ 
+ 0.5		08/08/2003
+ - Lock of the log file, so the module can be used in forks and threads, without
+ smashing the log file.
+ 
+ 0.4
+ - 'fun' option added, and not mandatory (I think it should :P)
+ 
+ 0.3
+ - 'daemon' argument no more mandatory: false when not specified.
+ 
+ 0.2
+ - Print to STDERR instead of STDOUT
 
