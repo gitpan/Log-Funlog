@@ -1,0 +1,47 @@
+Log::Funlog - Log with fun!
+
+Easy to use and funny log module :P
+
+Features:
+- Log level (verbosity, as much as you want)
+- Logging to stderr or file (as you want)
+- Print stack of calling subs (if you want)
+- Customizable prefix (okay, almost :) )
+- Quite fast
+- Fun include (if you want! )
+
+Install
+------------------------------------
+perk Makefile.PL
+make
+(make test)
+sudo make install
+
+Use
+------------------------------------
+Simple way:
+use Log::Funlog;
+*Log=Log::Funlog->new(levelmax => 5,	#Loglevel max: 5
+	verbose => 3)						#verbose 3
+Log(1,"plop");
+
+Complicated way (example):
+use Log::Funlog qw( error );
+*Log=Log::Funlog->new(levelmax => 5,	#Loglevel max: 5
+	file => "zou.log",					#name of the file
+	verbose => 3,						#verbose 3
+	daemon => 0,						#I am not a daemon, so log to stderr
+	prog => 1,							#I want the name of the progs
+	date => 1,							#and the date too
+	cosmetic => 'x', 					#crosses for the level
+	fun => 10,							#10% of fun (que je passe autour de moi)
+	error_header => 'Groumpf... ',		#Header for true errors
+	caller => 1);						#and I want the name of the sub
+
+sub sub_plop {
+	$i=shift;
+	Log($i%5,"plop",$i);
+}
+for(my $i=1;$i<100;$i++) {
+    sub_plop($i);
+}

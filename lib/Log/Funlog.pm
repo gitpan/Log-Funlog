@@ -1,209 +1,13 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.5 2004/07/23 11:50:33 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.8 2004/07/27 00:56:42 gab Exp $
 
 package Log::Funlog;
-
-=head1 NAME
-
-Log::Funlog.pm - Log module with fun inside!
- 
-=head1 SYNOPSIS
-
- use Log::Funlog;
- *my_sub=Log::Funlog->new(
- 	parameter => value,
- 	...
- );
- 
- my_sub(priority,string,string, ... );
-
-=head1 DESCRIPTION
-
-This is a Perl module intended ton manage the logs you want to do from your Perl scripts.
-
-It should be easy to use, and provide all the functions you should want.
-
-Just initialise the module, then use is as if it was an ordinary function!
-
-When you want to log something, just write your-sub-log(priority,"what I wanna log"), then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If it is, your log will be written with the format you decided.
-
-L<Funlog.pm> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
-
-=head2 Mandatories options
-
-=over
-
-=item B<levelmax>
-
-Max log level
-
-=item B<verbose>
-
-Verbosity of the script calling Funlog.pm
-
-0 if you do not want anything to be printed (??? what for ???)
-
-MUST be less or equal to B<levelmax> or the module will complain.
-
-Everything that is logged with a priority more than this will not be logged.
-	
-=back
-
-=head2 Non-mandatories options:
-
-=over
-
-=item B<daemon>
-
-1 if the script should be a daemon. (default is 0: not a daemon)
-
-When B<daemon>=1, Funlog.pm write to B<file> instead of B<STDERR>
-
-If you specify B<daemon>, you must specify B<file>
-
-=item B<file>
-
-File to write logs to.
-
-MUST be specified if you specify B<daemon>
-
-=item B<date>
-
-1 if you want the current date being printed in the logs.
-
-The date is printed like: Thu Aug 14 13:56:56 2003
-
-=item B<prog>
-
-1 if you want the name of the script ($0) being printed in the logs.
-
-=item B<cosmetic>
-
-An alphanumeric char you want to see in the logs.
-
-There will be as many as these chars as the loglevel of the string being logged.
-
-=item B<error_header>
-
-Header you want to see in the logs when you call the B<error> function.
-
-Default is '## Oops! ##'.
-
-=item B<fun>
-
-Probs of fun in your logs.
-
-Should be: 0<fun<=100
-
-See the sources of Funlog.pm if you want to change the sentences
-
-=item B<caller>
-
-1 if you want the name of the subroutine being logged.
-
-'all' if you want the stack of subs
-
-=back
-
-=head1 EXAMPLE
-
-Here is an example with almost all of the options enabled:
-
- $ vi gna.pl
- use Log::Funlog qw( error );
- *Log=Log::Funlog->new(levelmax => 5,	#Loglevel max: 5
- 	file => "zou.log",			#name of the file
-	verbose => 3,				#verbose 3
-	daemon => 0,				#I (gna.pl) am not a daemon
-	prog => 1,				#I want the name of the progs
-	date => 1,				#and the date too
-	cosmetic => 'x'				#crosses for the level
-	fun => 10,              #10% of fun (que je passe autour de moi)
-	error_header => 'Groumpf... ',	#Header for true errors
-	caller => 1);				#and I want the name of the sub
-
- [ ... some code ... ]
- Log(1,"I'm logged...");
- Log(3,"Me too...");
- Log(4,"Me not!");			#because 4>verbose
- sub ze-sub {
-		 $hop=1;
-		 Log(1,"One","two",$hop,"C"."++");
-		 error("oups!");
- }
- ze-sub;
- error("Zut");
- :wq
- 
- $ ./gna.pl
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] I'm logged...
- Thu Aug 14 13:56:56 2003 [ gna ] [ xxx   ] Me too...
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] {ze-sub} Onetwo1C++
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] {ze-sub} Groumpf... oups!
- Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] Groumpf... Zut
-
-=head1 DISCUSSION
-
-As you can see, the 'new' routine return a pointer to a sub. It's the easiest way I found to make this package as easy as possible to use.
-
-I guess that calling the sub each time you want to log something (and even if it won't print anything due to the too low level of the priority given) is not really fast...
-
-Especially if you look at the code, and you see all the stuffs the module do before printing something.
-
-But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something.
-
-If you want a I<really> fast routine of log, please propose me a way to do it, or do it yourself, or do not log :)
-
-=head1 HISTORY
-
-I'm doing quite a lot of Perl scripts, and I wanted the scripts talk to me. So I searched a log routine.
-
-As I didn't found it on the web, and I wanted something more 'personnal' than syslog (I didn't want my script write to syslog), I started to write a very little routine, that I copied to all the scripts I made.
-
-As I copied this routine, I added some stuff to match my needs; I wanted something rather fast, easy to use, easy to understand (even for me :P ), quite smart and ... a little bit funny :)
-
-The I wrote this module, that I 'use Funlog' in each of my scripts.
-
-=head1 CHANGELOG
-
- 0.2 .............. : Print to STDERR instead of STDOUT
- 0.3 .............. : 'daemon' argument no more mandatory: false when not specified
- 0.4 .............. : 'fun' option added, and not mandatory (I think it should :P)
- 0.5   08/08/2003 	: Lock of the log file, so the module can be used in forks and threads, without smashing
- 					: the log file
- 0.6   14/08/2003 	: 'caller' option added
- 0.6.1 18/08/2003	: This doc added :P
- 0.6.2 06/01/2004   : My mail address changed
-					: {} around the name of the sub
- 0.6.3 16/02/2004	: Fix a bug that garble logs if you don't chose 'date' option
- 0.7.0 20/02/2004	: 'error' function added.
- 					: Doc updated.
-					: 'file' option was written not mandatory, but it complained if you didn't supply it
-					: Doc fixed 'bout the {} around the name of the sub
-					: Wiped the ':' after the name of the subs
- 0.7.1 21/07/2004	: Minor (cosmetic) bug fixes
- 0.7.2 23/07/2004	: There is now the name of all calling subs if you specify caller => 'all'
- 
-										 
-=head1 AUTHOR
-
-Gabriel Guillon
-
-korsani@free.fr
-
-=head1 LICENCE
-
-GPL, of course!
-
-If you have comments, or if you (want to) add some features, PLEASE let me know!
-
-=cut
 
 BEGIN {
 	use Exporter;
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.7.2';
+	$VERSION='0.7.2.1';
 }
 use Carp;
 #use Sys::Syslog;
@@ -234,7 +38,7 @@ sub new {
 }
 sub wr {
 	my $level=shift;						#Niveau de log
-	return if ($level > $args{verbose});	#Sort si la 'verbosité' du messages et plus grande que celle voulue
+	return if ($level > $args{verbose} or $level == 0);	#Sort si la 'verbosité' du messages et plus grande que celle voulue
 	my $LOCK_SH=1;
 	my $LOCK_EX=2;
 	my $LOCK_NB=4;
@@ -346,4 +150,206 @@ T'as pas autre chose à faire, là?
 Ca devient relou...
 T'as pensé à aller voir un psy?
 Toi, tu pense à changer de job...
+
+__END__
+
+=head1 NAME
+
+Log::Funlog - Log module with fun inside!
+ 
+=head1 SYNOPSIS
+
+ use Log::Funlog;
+ *my_sub=Log::Funlog->new(
+ 	parameter => value,
+ 	...
+ );
+ 
+ my_sub(priority,string,string, ... );
+
+=head1 DESCRIPTION
+
+This is a Perl module intended ton manage the logs you want to do from your Perl scripts.
+
+It should be easy to use, and provide all the functions you should want.
+
+Just initialise the module, then use is as if it was an ordinary function!
+
+When you want to log something, just write your-sub-log(priority,"what I wanna log"), then the module will analyse if the priority if higher enough (seeing B<L<verbose>> option). If it is, your log will be written with the format you decided.
+
+L<Funlog.pm> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
+
+=head2 Mandatories options
+
+=over
+
+=item B<levelmax>
+
+Max log level
+
+=item B<verbose>
+
+Verbosity of the script calling Funlog.pm
+
+0 if you do not want anything to be printed (??? what for ???)
+
+MUST be less or equal to B<levelmax> or the module will complain.
+
+Everything that is logged with a priority more than this will not be logged.
+	
+=back
+
+=head2 Non-mandatories options:
+
+=over
+
+=item B<daemon>
+
+1 if the script should be a daemon. (default is 0: not a daemon)
+
+When B<daemon>=1, Funlog.pm write to B<file> instead of B<STDERR>
+
+If you specify B<daemon>, you must specify B<file>
+
+=item B<file>
+
+File to write logs to.
+
+MUST be specified if you specify B<daemon>
+
+=item B<date>
+
+1 if you want the current date being printed in the logs.
+
+The date is printed like: Thu Aug 14 13:56:56 2003
+
+=item B<prog>
+
+1 if you want the name of the script ($0) being printed in the logs.
+
+=item B<cosmetic>
+
+An alphanumeric char you want to see in the logs.
+
+There will be as many as these chars as the loglevel of the string being logged.
+
+=item B<error_header>
+
+Header you want to see in the logs when you call the B<error> function.
+
+Default is '## Oops! ##'.
+
+=item B<fun>
+
+Probs of fun in your logs.
+
+Should be: 0<fun<=100
+
+See the sources of Funlog.pm if you want to change the sentences
+
+=item B<caller>
+
+1 if you want the name of the subroutine being logged.
+
+'all' if you want the stack of subs
+
+=back
+
+=head1 EXAMPLE
+
+Here is an example with almost all of the options enabled:
+
+ $ vi gna.pl
+ use Log::Funlog qw( error );
+ *Log=Log::Funlog->new(levelmax => 5,	#Loglevel max: 5
+ 	file => "zou.log",			#name of the file
+	verbose => 3,				#verbose 3
+	daemon => 0,				#I (gna.pl) am not a daemon
+	prog => 1,				#I want the name of the progs
+	date => 1,				#and the date too
+	cosmetic => 'x',				#crosses for the level
+	fun => 10,              #10% of fun (que je passe autour de moi)
+	error_header => 'Groumpf... ',	#Header for true errors
+	caller => 1);				#and I want the name of the sub
+
+ [ ... some code ... ]
+ Log(1,"I'm logged...");
+ Log(3,"Me too...");
+ Log(4,"Me not!");			#because 4>verbose
+ sub ze-sub {
+		 $hop=1;
+		 Log(1,"One","two",$hop,"C"."++");
+		 error("oups!");
+ }
+ ze-sub;
+ error("Zut");
+ :wq
+ 
+ $ ./gna.pl
+ Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] I'm logged...
+ Thu Aug 14 13:56:56 2003 [ gna ] [ xxx   ] Me too...
+ Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] {ze-sub} Onetwo1C++
+ Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] {ze-sub} Groumpf... oups!
+ Thu Aug 14 13:56:56 2003 [ gna ] [ x     ] Groumpf... Zut
+
+=head1 DISCUSSION
+
+As you can see, the 'new' routine return a pointer to a sub. It's the easiest way I found to make this package as easy as possible to use.
+
+I guess that calling the sub each time you want to log something (and even if it won't print anything due to the too low level of the priority given) is not really fast...
+
+Especially if you look at the code, and you see all the stuffs the module do before printing something.
+
+But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something.
+
+If you want a I<really> fast routine of log, please propose me a way to do it, or do it yourself, or do not log :)
+
+=head1 HISTORY
+
+I'm doing quite a lot of Perl scripts, and I wanted the scripts talk to me. So I searched a log routine.
+
+As I didn't found it on the web, and I wanted something more 'personnal' than syslog (I didn't want my script write to syslog), I started to write a very little routine, that I copied to all the scripts I made.
+
+As I copied this routine, I added some stuff to match my needs; I wanted something rather fast, easy to use, easy to understand (even for me :P ), quite smart and ... a little bit funny :)
+
+The I wrote this module, that I 'use Funlog' in each of my scripts.
+
+=head1 CHANGELOG
+
+ 0.2					: Print to STDERR instead of STDOUT
+ 0.3					: 'daemon' argument no more mandatory: false when not specified
+ 0.4					: 'fun' option added, and not mandatory (I think it should :P)
+ 0.5		08/08/2003 	: Lock of the log file, so the module can be used in forks and threads, without smashing
+ 						: the log file
+ 0.6		14/08/2003 	: 'caller' option added
+ 0.6.1		18/08/2003	: This doc added :P
+ 0.6.2		06/01/2004	: My mail address changed
+						: {} around the name of the sub
+ 0.6.3		16/02/2004	: Fix a bug that garble logs if you don't chose 'date' option
+ 0.7.0		20/02/2004	: 'error' function added.
+ 						: Doc updated.
+						: 'file' option was written not mandatory, but it complained if you didn't supply it
+						: Doc fixed 'bout the {} around the name of the sub
+						: Wiped the ':' after the name of the subs
+ 0.7.1		21/07/2004	: Minor (cosmetic) bug fixes
+ 0.7.2		23/07/2004	: There is now the name of all calling subs if you specify caller => 'all'
+ 						: Added to CPAN :)
+ 0.7.2.1	23/07/2004	: Doc moved to bottom
+ 						: README added
+						: Do not write anything if you log with priority 0
+ 
+										 
+=head1 AUTHOR
+
+Gabriel Guillon
+
+korsani@free.fr
+
+=head1 LICENCE
+
+GPL, of course!
+
+If you have comments, or if you (want to) add some features, PLEASE let me know!
+
+=cut
 
