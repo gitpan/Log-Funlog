@@ -1,4 +1,4 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.12 1988/01/01 03:10:09 gab Exp $
+#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.13 2004/09/01 17:42:11 gab Exp $
 
 =head1 NAME
 
@@ -186,6 +186,9 @@ The I wrote this module, that I 'use Funlog' in each of my scripts.
 						: Do not write anything if you log with priority 0
  0.7.2.2	29/07/2004	: Doc moved to top :)
  0.7.2.3	13/08/2004	: "TODO" added to the pack
+ 0.7.2.4	01/09/2004	: Use of bless (I guess it looks better at perl's guru's eyes)
+						: use strict :D
+						: Comments now in english
  
 										 
 =head1 AUTHOR
@@ -209,18 +212,19 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( error );
-	$VERSION='0.7.2.3';
+	$VERSION='0.7.2.4';
 }
 use Carp;
 use strict;
 #use Sys::Syslog;
-@fun=<DATA>;
+my @fun=<DATA>;
 chomp @fun;
-$count=0;
-
+my $count=0;
+use vars qw( %args $prog $error_header $error);
 sub new {
-	shift;
-	%args=@_;
+	my $this = shift;
+	my $class = ref($this) || $this;
+	%args=@_;							#getting args to a hash
 	if (defined $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
@@ -230,27 +234,34 @@ sub new {
 	croak "verbose > levelmax (which value is $args{levelmax})" if ($args{verbose} > $args{levelmax});
 	croak "0<=fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<0));                   #>pc<
 	$error_header='## Oops! ##' unless (defined $args{error_header});
+	
 	if ($args{prog}) {
 		$prog=`basename $0`;
 		chomp $prog;
 	}
 
-	return \&wr;					#Ruse de sioux: retourne l'adresse de la fonction de log
+	my $self = \&wr;
+	bless $self, $class;
+	return $self;					#Return the function's adress
 }
 sub wr {
-	my $level=shift;						#Niveau de log
-	return if ($level > $args{verbose} or $level == 0);	#Sort si la 'verbosité' du messages et plus grande que celle voulue
+	my $level=shift;						#log level wanted by the user
+	return if ($level > $args{verbose} or $level == 0);	#and exit if it is greater than the verbosity
 	my $LOCK_SH=1;
 	my $LOCK_EX=2;
 	my $LOCK_NB=4;
 	my $LOCK_UN=8;
-	if ($args{daemon}) {					#Si on est censé être un démon, on écrit dans le fichier
+	if ($args{daemon}) {					#write to a file if I am a daemon
 		open(LOG,">>$args{file}") or croak "$!";
 		select LOG;
 		flock LOG, $LOCK_EX;
-	} else {								#Sinon, dans STDERR
+	} else {								#write to stderr if not
 		select STDERR;
 	}
+#####################################
+#	Header building!!
+#####################################
+	
 	my $logstring;
 # 	Date
 	$logstring=scalar localtime if defined $args{date};
@@ -259,17 +270,18 @@ sub wr {
 #	Niveau de Log
 	$logstring.=" [ ".$args{cosmetic} x $level. " " x ($args{levelmax} - $level)." ]" if defined $args{cosmetic};
 	$logstring.=" " if ($logstring ne "");
-	if ($args{'caller'}) {			#arf! trop forte, cette commande!
-		if ($args{'caller'} eq "all") {			#si on demande tout les appels
-			$i=1;
-			while ($tmp=(caller($error?$i+1:$i))[3]) {	#on tournicote tant qu'il y en a
+	if ($args{'caller'}) {						#if the user want the call stack
+		my $caller;
+		if ($args{'caller'} eq "all") {			#if the user want ALL the call stack
+			my $i=1;
+			while (my $tmp=(caller($error?$i+1:$i))[3]) {	#turn as long as there is something on the stack
 				$caller.=$tmp."/";
 				$i++;
 			};
-		} else {
-			$caller=(caller($error?2:1))[3];			#sinon on ne chope que le dernier
+		} else {								#okay, the user want only the top of the call stack
+			$caller=(caller($error?2:1))[3];	#I get the only the last
 		}
-		if ($caller) {								#si on a eu des résultats (ce qui n'est pas évident si on est dans main)
+		if ($caller) {							#if I there were something on the stack (ie: we are not in 'main')
 			$caller=~s/main\:\://g;
 			my @a=split(/\//,$caller);
 			@a=reverse @a;
@@ -277,13 +289,17 @@ sub wr {
 		}
 		undef $caller;
 	}
-	print $logstring;					#Et hop, on affiche le début
-	while (my $tolog=shift) {			#tant qu'il y a des trucs sur la ligne
+#####################################
+#	End oh header building
+#####################################
+
+	print $logstring;					#print the header
+	while (my $tolog=shift) {			#and then print all the things the user wants me to print
 		print $tolog;
 	}
 	print "\n";
 #   Passe le fun autour de toi!
-    print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#pas dans les 10 1ères lignes
+    print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#write a bit of fun, but not in the first 10 lines
 	close LOG if ($args{daemon});
 	select(STDOUT);
 	$count++;
@@ -348,6 +364,4 @@ T'as pas autre chose à faire, là?
 Ca devient relou...
 T'as pensé à aller voir un psy?
 Toi, tu pense à changer de job...
-
-__END__
 
