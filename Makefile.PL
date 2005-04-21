@@ -7,13 +7,5 @@ WriteMakefile(
 	NAME			=>	'Log::Funlog',
 	VERSION_FROM	=>	"lib/Log/Funlog.pm",
 	AUTHOR			=>	'Gabriel Guillon <korsani(removeme)@free(removeme).fr(removeagain)>',
-	PM_FILTER		=>	'grep -v Pfiou',
-	PL_FILES		=>	{},
 );
-#sub MY::postamble {
-#	return <<'MAKE_FRAG';
-#$(MYEXTLIB): sdbm/Makefile
-#cd sdbm && $(MAKE) all
-#MAKE_FRAG
-#}
 1;

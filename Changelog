@@ -1,14 +1,23 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.84		14/04/2005
+ - No more complaining when you ask verbose absurdly high ( > levelmax)
+ - Colors in log, if you want, and if your are not under MSWin
+ - Splitting funny sentences from Log::Funlog's core to Log::Funlog::Lang.
+   Long time since I wanted to do such a thing!
+   So I can clean the directory from all the stuff laying around.
+ - If Log::Funlog::Lang is not present and you don't ask for fun, it won't
+ complain (so that you can use Log::Funlog in a production environment: it
+ has no more fancy things in it that a customer could see.)
 
  0.83_2		08/03/2005
- - complain that %ss was defined without 'caller' option even if you don't
+ - Complained that %ss was defined without 'caller' option even if you don't
  specify %ss
  
  0.83_1		17/02/2005
  - caller => 1 was bugged
- - warn if %ss is specified and 'caller' was not, then assume caller => 1
+ - Warn if %ss is specified and 'caller' was not, then assume caller => 1
 
  0.83		25/01/2005
  - README Updated

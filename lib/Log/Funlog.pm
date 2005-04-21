@@ -48,7 +48,9 @@ In the form B<n>/B<m>, where B<n><B<m> or B<n>=max.
 
 B<n> is the wanted verbosity of your script, B<m> if the maximum verbosity of your script.
 
-Everything that is logged with a priority more than B<n> (in case B<n> is numeric)  will not be logged.
+B<n> can by superior to B<m>. It will just set B<n>=B<m>
+
+Everything that is logged with a priority more than B<n> (in case B<n> is numeric) will not be logged.
 
 0 if you do not want anything to be printed.
 
@@ -92,7 +94,7 @@ B<delimiters1> is something taken from +-=|!./\<{([ and B<delimiters2> is take f
 
 Example:
  '%dd %p::p hey %l[]l %s{}s '
- 
+
 should produce something like:
 
  Wed Sep 22 18:50:34 2004 :gna.pl: hey [x    ] {sub48} Something happened
@@ -110,7 +112,7 @@ is not advisable because the code that whatch for the header is not that smart a
 Putting things in %?? is good only for %ss because stack won't be printed if there is nothing to print:
  ' {%ss} '
 
-will print something like that if you log from anywhere than a sub:
+will print something like that if you log from elsewhere than a sub:
  {}
 
 Although
@@ -123,6 +125,28 @@ You should probably always write things like:
 
 
 I<NOTE NOTE NOTE>: The fields are subject to change!
+
+=item B<colors>
+
+Put colors in the logs :)
+
+If you just put '1', it will use default colors:
+
+ colors => '1',
+
+If you want to override default colors, specify a hash containing item => color
+
+ colors => {'prog' => 'white', 'date' => 'yellow' },
+
+Items are:
+	caller: for the stack of calls,
+	prog: for the name of the program,
+	date: for the current date,
+	level: for the log level,
+	msg: for the log message
+
+Colors are:
+	black, red, green, yellow, blue, magenta, cyan, white and none
 
 =item B<daemon>
 
@@ -223,7 +247,7 @@ Here is an example with almost all of the options enabled:
 This:
 
  header => '-(%dd)--( %p)><(p )-( %l)-<>-(l %s)<>(s '
- 
+
 won't do what you expect ( this is the ')><(' )
 
 Workaround is:
@@ -232,7 +256,9 @@ Workaround is:
 
 And this kind of workaround work for everything but %ss, as it is not calculated during initialization.
 
- 
+=head1 DEPENDENCIES
+
+Log::Funlog::Lang provide the funny messages.
 
 =head1 DISCUSSION
 
@@ -245,6 +271,16 @@ Especially if you look at the code, and you see all the stuffs the module do bef
 But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something, and what to write
 
 If you want a I<really> fast routine of log, please propose me a way to do it, or do it yourself, or do not log :)
+
+You can probably say:
+
+ my Log::Funlog $log = new Log::Funlog;		# $log is now an Log::Funlog object. $log contain the address of the sub used to write.
+
+Then:
+
+ &{$log}(1,'plop');
+
+But it is probably not convenient.
 
 =head1 HISTORY
 
@@ -283,20 +319,24 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION=0.83_2;
+	$VERSION='0.84';
 }
 use Carp;
 use strict;
+my @fun;
+eval {require Log::Funlog::Lang};
+if ($@) {
+	@fun=();
+} else {
+	@fun=Log::Funlog::Lang->new();
+}
 #use Sys::Syslog;
 use Scalar::Util qw(tainted);
-my @fun=<DATA>;
-chomp @fun;
 my $count=0;
-
 use vars qw( %args $me $error_header $error $metaheader);
 
 # Defined here, used later!
-####################################"
+#####################################
 my $rexpleft=q/<>{}()[]/;				#Regular expression that are supposed to be on the left of the thing to print
 my $rexprite=$rexpleft;
 $rexprite=~tr/><}{)(][/<>{}()[]/;		#tr same for right
@@ -311,6 +351,25 @@ my $LOCK_NB=4;
 my $LOCK_UN=8;
 my $handleout;			#Handle of the output
 my %whattoprint;
+my %colortable=(
+	'black' => "\e[30;1m",
+	'red' => "\e[31;1m",
+	'green' => "\e[32;1m",
+	'yellow' => "\e[33;1m",
+	'blue' => "\e[34;1m",
+	'magenta' => "\e[35;1m",
+	'cyan' => "\e[36;1m",
+	'white' => "\e[37;1m",
+	'none' => "\e[0m"
+);
+my %defaultcolors=(
+	'level' => $colortable{'red'},
+	'caller' => $colortable{'none'},
+	'date' => $colortable{'none'},
+	'prog' => $colortable{'magenta'},
+	'msg' => $colortable{'yellow'}
+);
+my %colors;				#will contain the printed colors. It is the same than %defaultcolors, but probably different :)
 
 ################################################################################################################################
 sub replace {						#replace things like %l<-->l by things like <-** ->
@@ -323,9 +382,9 @@ sub replace {						#replace things like %l<-->l by things like <-** ->
 		# Now, for complicated cases like %d<-->d or %d-<>-d
 		# 
 		$header=~s/\%$what(.*[$rexpleft]+)([$rexprite]+.*)$what/$1$center$2/;	#%d-<>-d   -> -<plop>-
-																				#%d<-->d   -> <-->
-		$header=~s/\%$what(.*[$rexpsym]+)([$rexpsym]+.*)$what/$1$center$2/;		#-<plop>-  -> -<plop>-
-																				#<-->      -> <-plop->
+											#%d<-->d   -> <-->
+		$header=~s/\%$what(.*[$rexpsym]+)([$rexpsym]+.*)$what/$1$center$2/;	#-<plop>-  -> -<plop>-
+											#<-->      -> <-plop->
 	} else {
 		$header=~s/\%$what.*$what//;
 	}
@@ -338,12 +397,14 @@ sub new {
 	my $class = ref($this) || $this;
 	%args=@_;							#getting args to a hash
 
+
 	# Okay, now sanity checking!
 	# This is cool because we have time, so we can do all sort of checking, calculating, things like that
 	#########################################
 	if (defined $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
+	croak "'verbose' option is mandatory." if (! $args{'verbose'});
 	croak "'verbose' should be of the form n/m or max/m" if (($args{'verbose'} !~ /^\d+\/\d+$/) and ($args{'verbose'} !~ /^max\/\d+$/));
 
 	# Parsing 'verbose' option...
@@ -358,44 +419,98 @@ sub new {
 		$args{verbose}=$verbose;
 		$args{levelmax}=$levelmax;
 	}
-	croak "'verbose' should be of the form 'n/m', where n<=m, which not seem to be the case: $args{verbose} > $args{levelmax}" if ($args{verbose} > $args{levelmax});
+	if ($args{verbose} > $args{levelmax}) {
+		carp "You ask verbose $args{verbose} and the max is $args{levelmax}. I set your verbose at $args{levelmax}.\n";
+		$args{verbose}=$args{levelmax};
+	}
+
 
 	# Time for fun!
 	#########################################
-	if ($args{'fun'}) {
-		croak "'fun' should only be a number" if ($args{fun} !~ /^\d+$/);
+	if (defined $args{fun}) {
+		croak "'fun' should only be a number (between 0 and 100, bounds excluded)." if ($args{fun} !~ /^\d+$/);
+		croak "0<fun<=100" if ($args{fun}>100 or $args{fun}<=0);
+		croak "You want fun but Log::Funlog::Lang is not available." if ($#fun <= 0);
 	}
-	croak "0<fun<=100" if (defined $args{fun} and ($args{fun}>100 or $args{fun}<=0));
 
-	# Error handler
+	# Colors
 	#########################################
+	#We will build %colors here.
+	#If color is wanted:
+	#	if default is wanted, %colors = %defaultcolors
+	#	if not, %colors = %defaultcolors, overrident by the parameters provided
+	#If no colors is wanted, %colors will be filled with the 'none' colors.
+	#
+	#This way of doing should be quicker :)
+	#
+	if (exists $args{'colors'}) {						#If color is wanted
+		use Config;
+		if ($Config{'osname'} eq 'MSWin32') {				#Oh oh! AFAIK MSWin console do not support color...
+			carp 'Colors wanted, but MSwin detected. Colors deactivated.';
+			delete $args{'colors'};
+			$colortable{'none'}='';					#putting 'none' color to void
+			foreach my $color (keys %defaultcolors) {
+				$colors{$color}=$colortable{'none'};		#and propagating it
+			}
+#			no Config;
+		} else {						#We are not in MSWin...
+			if (ref(\$args{'colors'}) eq 'SCALAR') {		#default colors?	
+				%colors=%defaultcolors if ($args{'colors'});
+			} elsif(ref($args{'colors'}) eq 'HASH') {	#No... Overridden colors :)
+				foreach my $item (keys %defaultcolors) {
+					$colors{$item}=exists ${		#If the color is provided
+						$args{'colors'}
+					}{$item}?
+					$colortable{
+						${
+							$args{'colors'}		#we take it
+						}{$item}
+					}:$defaultcolors{$item};		#if not, we take the default one
+				}
+			} else {
+				croak("'colors' must be type of SCALAR or HASH, not ".ref($args{'colors'})."\n");
+			}
+		}
+	} else {									#no colors? so the color table will contain the color 'none'
+		$colortable{'none'}='' if ($Config{'osname'} eq 'MSWin32');
+		foreach my $item (keys %defaultcolors) {
+			$colors{$item}=$colortable{'none'};
+		}
+	}
+
+
+# Error handler
+#########################################
 	$error_header=defined $args{error_header} ? $args{error_header} : '## Oops! ##';
 
-	# We define default cosmetic if no one was defined
-	#########################################
+# We define default cosmetic if no one was defined
+#########################################
 	$args{cosmetic}='x' if (not defined $args{cosmetic});
 
-	# Parsing header. Goal is to avoid work in the wr() function
-	#########################################
+# Parsing header. Goal is to avoid work in the wr() function
+#########################################
 	if (defined $args{header}) {
 
 		$metaheader=$args{header};
 
-		# if %ll is present, we can be sure that it will always be, be it will vary
-		$whattoprint{'l'}=1 if ($metaheader=~/\%l.*l/);
-		$metaheader=replace($metaheader,"l","\$level");
+		# if %ll is present, we can be sure that it will always be, but it will vary so we replace by a variable
+		if ($metaheader=~/\%l.*l/) {
+			$whattoprint{'l'}=1;
+			$metaheader=replace($metaheader,"l","\$level");
+		}
 
 		# same for %dd
 		$whattoprint{'d'}=1 if ($metaheader=~/\%d.*d/);
-		$metaheader=replace($metaheader,"d","\$date");
+		$metaheader=replace($metaheader,"d",$colors{'date'}."\$date".$colortable{'none'});
 
 		# but %pp won't vary
 		$me=`basename $0`;
 		chomp $me;
 		$whattoprint{'p'}=1 if ($metaheader=~/\%p.*p/);
-		$metaheader=replace($metaheader,"p",$me);
+		$metaheader=replace($metaheader,"p",$colors{'prog'}.$me.$colortable{'none'});
 		# and stack will be present or not, depending of the state of the stack
 		$whattoprint{'s'}=1 if ($metaheader=~/\%s.*s/);
+
 		if ((! defined $args{'caller'}) and ($metaheader=~/\%s.*s/)) {
 			carp "\%ss is defined but 'caller' option is not specified.\nI assume 'caller => 1'";
 			$args{'caller'}=1;
@@ -404,8 +519,8 @@ sub new {
 		$metaheader="";
 	}
 
-	# Daemon. We calculate here the output handle to use
-	##########################################
+# Daemon. We calculate here the output handle to use
+##########################################
 	if ($args{'daemon'}) {
 		open($handleout,">>$args{'file'}") or croak "$!";
 	} else {
@@ -414,8 +529,8 @@ sub new {
 
 
 	my $self = \&wr;
-	bless $self, $class;
-	return $self;					#Return the function's address
+	bless $self, $class;			#The function's address is now a Log::Funlog object
+#	return $self;					#Return the function's address, that is an object Log::Funlog
 }
 
 #################################
@@ -465,7 +580,7 @@ sub wr {
 				$caller=~s/main\:\://g;				#wipe 'main'
 				my @a=split(/\//,$caller);			#split..
 				@a=reverse @a;						#reverse...
-				$header=replace($header,"s",join(':',@a));
+				$header=replace($header,"s",$colors{'caller'}.join(':',@a).$colortable{'none'});
 			} else {
 				$header=replace($header,"s");
 			}
@@ -477,7 +592,8 @@ sub wr {
 			$header=~s/\$date/$tmp/;
 		}
 		if ($whattoprint{'l'}) {
-			my $tmp=$args{cosmetic} x $level. " " x ($args{levelmax} - $level);
+			my $tmp=$colors{'level'}.$args{cosmetic} x $level. " " x ($args{levelmax} - $level).$colortable{'none'};
+			
 			$header=~s/\$level/$tmp/;
 		}
 
@@ -486,9 +602,11 @@ sub wr {
 		#####################################
 		print $header;						#print the header
 	}
+	print $colors{'msg'};
 	while (my $tolog=shift) {			#and then print all the things the user wants me to print
 		print $tolog;
 	}
+	print $colortable{'none'};
 	print "\n";
 	#Passe le fun autour de toi!
 	print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#write a bit of fun, but not in the first 10 lines
@@ -503,57 +621,3 @@ sub error {
 	return 1;
 }
 1;
-__DATA__
--- this line will never be written --
-Pfiou... marre de logger, moi
-J'ai faim!
-Je veux faire pipi!
-Dis, t'as pensé à manger?
-Fait froid, dans ce process, non?
-Fait quel temps, dehors?
-Aller, pastis time!
-Je crois que je suis malade...
-Dis, tu peux me choper un sandwich?
-On se fait une toile?
-Aller, décolle un peu de l'écran
-Tu fais quoi ce soir, toi?
-On va en boîte?
-Pousse-toi un peu, je vois rien
-Vivement les vacances...
-Mince, j'ai pas prévenu ma femme que je finissais tard...
-Il est chouette ton projet?
-Bon, il est bientôt fini, ce process??
-Je m'ennuie...
-Tu peux me mettre la télé?
-Y a quoi ce soir?
-J'irais bien faire un tour à Pigalle, moi.
-Et si je formattais le disque?
-J'me ferais bien le tour du monde...
-Je crois que je suis homosexuel...
-Bon, je m'en vais, j'ai des choses à faire.
-Et si je changeais de taf? OS, c'est mieux que script, non?
-J'ai froid!
-J'ai chaud!
-Tu me prend un café?
-T'es plutôt chien ou chat, toi?
-Je crois que je vais aller voir un psy...
-Tiens, 'longtemps que j'ai pas eu de news de ma soeur!
-Comment vont tes parents?
-Comment va Arthur, ton poisson rouge?
-Ton chien a fini de bouffer les rideaux?
-Ton chat pisse encore partout?
-Tu sais ce que fait ta fille, là?
-T'as pas encore claqué ton chef?
-Toi, tu t'es engueulé avec ta femme, ce matin...
-T'as les yeux en forme de contener. Soucis?
-Et si je partais en boucle infinie?
-T'es venu à pied?
-Et si je veux pas exécuter la prochaine commande?
-Tiens, je vais me transformer en virus...
-Ca t'en bouche un coin, un script qui parle, hein?
-Ah m...., j'ai oublié les clés à l'intérieur de la voiture...
-T'as pas autre chose à faire, là?
-Ca devient relou...
-T'as pensé à aller voir un psy?
-Toi, tu pense à changer de job...
-

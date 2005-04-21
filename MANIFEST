@@ -3,12 +3,9 @@ MANIFEST
 MANIFEST.SKIP
 lib/Log/Funlog.pm
 Makefile.PL
-misc/LogPC.pm
-misc/makepc.pl
 t/test.t
 README
 TODO
 Changelog
 Copying
-Build.PL
 META.yml                                 Module meta-data (added by MakeMaker)

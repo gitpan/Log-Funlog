@@ -4,10 +4,16 @@ use Log::Funlog qw( error );
 *Log=Log::Funlog->new(
 	file => "zou.log",
 	verbose => '5/5',
-	fun => 10,
 	cosmetic => '*',
 	fun => 50,
 	caller => 'all',
+	colors => {
+		'date' => 'black',
+		'caller' => 'green',
+		'msg' => 'black'
+	},
+	colors => '1',
+	
 	header => ' ) %dd ( )>-%pp-<(O)>%l--l<( %s{||}s '
 );
 for ($j=1;$j<=5;$j++) {

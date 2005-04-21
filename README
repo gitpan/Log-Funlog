@@ -4,8 +4,7 @@ vim600: set textwidth=80:
 Log::Funlog - Log with fun!
 
 Gab
-korsani\ /free\
-		@      fr
+korsani free fr
 
  ,+---------------------------------- -  -   -    -     -
 ( | Description
@@ -51,9 +50,8 @@ install as 'vendor'...
  ,+---------------------------------- -  -   -    -     -
 ( | Use
  `+---------------------------------- -  -   -    -     -
-
-, Simple way:
-`------------------------------
+   , Simple way:
+    `------------------------------
 No header, log to stderr, no fun, just log :)
 If you have just one thing to remember, it is this form.
 
@@ -76,8 +74,8 @@ will output:
 As you can see, defaults are sensible!
 
 
-, Complicated way (example):
-`------------------------------
+   , Complicated way (example):
+    `------------------------------
 
 	use Log::Funlog qw( error );
 	*Log=Log::Funlog->new(
@@ -87,8 +85,9 @@ As you can see, defaults are sensible!
 		header => "%dd %pp %l[]l %s{}s ",		#header format
 		cosmetic => 'x', 					#crosses for the level
 		fun => 10,						#10% of fun (que je passe autour de moi)
+		colors => '1',						#Colors, default ones
 		error_header => 'Groumpf... ',		#Header for true errors
-		caller => 1);				#and I want the name of the sub that is logging
+		caller => '1');				#and I want the name of the sub that is logging
 
 	sub sub_plop {
 		$i=shift;
