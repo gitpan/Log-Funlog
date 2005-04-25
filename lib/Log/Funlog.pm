@@ -319,7 +319,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION='0.84';
+	$VERSION='0.84_1';
 }
 use Carp;
 use strict;

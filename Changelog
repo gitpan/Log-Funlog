@@ -1,6 +1,9 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.84_1		25/04/2005
+ - test.t was bugged
+
  0.84		14/04/2005
  - No more complaining when you ask verbose absurdly high ( > levelmax)
  - Colors in log, if you want, and if your are not under MSWin

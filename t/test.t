@@ -1,21 +1,38 @@
 #!/usr/bin/perl -w
 use Test::Simple tests => 30;
 use Log::Funlog qw( error );
-*Log=Log::Funlog->new(
-	file => "zou.log",
-	verbose => '5/5',
-	cosmetic => '*',
-	fun => 50,
-	caller => 'all',
-	colors => {
-		'date' => 'black',
-		'caller' => 'green',
-		'msg' => 'black'
-	},
-	colors => '1',
-	
-	header => ' ) %dd ( )>-%pp-<(O)>%l--l<( %s{||}s '
-);
+eval {use Log::Funlog::Lang};
+if (!$@) {
+	*Log=Log::Funlog->new(
+			file => "zou.log",
+			verbose => '5/5',
+			cosmetic => '*',
+			caller => 'all',
+			fun => 50,
+			colors => {
+			'date' => 'black',
+			'caller' => 'green',
+			'msg' => 'black'
+			},
+			colors => '1',
+			header => ' ) %dd ( )>-%pp-<(O)>%l--l<( %s{||}s '
+	);
+} else {
+	*Log=Log::Funlog->new(
+			file => "zou.log",
+			verbose => '5/5',
+			cosmetic => '*',
+			caller => 'all',
+			colors => {
+			'date' => 'black',
+			'caller' => 'green',
+			'msg' => 'black'
+			},
+			colors => '1',
+
+			header => ' ) %dd ( )>-%pp-<(O)>%l--l<( %s{||}s '
+	);
+};
 for ($j=1;$j<=5;$j++) {
 	ok( Log($j,"Log level $j") );
 }
