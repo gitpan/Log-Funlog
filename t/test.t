@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use Test::Simple tests => 30;
 use Log::Funlog qw( error );
-eval {use Log::Funlog::Lang};
+eval {require Log::Funlog::Lang};
 if (!$@) {
 	*Log=Log::Funlog->new(
 			file => "zou.log",
