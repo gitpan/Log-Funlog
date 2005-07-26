@@ -12,7 +12,7 @@ Log::Funlog - Log module with fun inside!
 	...
  );
 
- my_sub(priority,string,string, ... );
+ [$string=]my_sub($priority [,$string | @array [,$string | @array [, ... ] ]] );
 
 =head1 DESCRIPTION
 
@@ -24,23 +24,23 @@ Just initialize the module, then use is as if it was an ordinary function!
 
 When you want to log something, just write:
 
- your-sub-log(priority,"what"," I ","wanna log")
+ your-sub-log(priority,"what"," I ","wanna log is: ",@an_array)
 
 then the module will analyse if the priority if higher enough (seeing L</verbose> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
 
 As more, the module can write funny things to your logs, if you want ;) It can be very verbose, or just ... shy :)
 
-L<Log::Funlog|Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logs.
+L<Log::Funlog|Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logsi with a pattern.
 
-Parameters are: L</header>, L</error_header>, L</cosmetic>, L</verbose>, L</file>, L</daemon>, L</fun> and L</caller>
+Parameters are: L<header>, L<error_header>, L<cosmetic>, L<verbose>, L<file>, L<daemon>, L<fun>, L<colors>, L<splash> and L<caller>
 
 L</verbose> is mandatory.
 
-B<NOTE NOTE NOTE>: Interface (L</header>) is subject to change!
-
 =head2 MANDATORY OPTION
 
-=head3 verbose
+=over
+
+=item B<verbose>
 
 In the form B<n>/B<m>, where B<n><B<m> or B<n>=max.
 
@@ -69,9 +69,13 @@ This option is backward compatible with 0.7.x.x versions.
 
 See L</EXAMPLE>
 
+=back
+
 =head2 NON MANDATORIES OPTIONS
 
-=head3 header
+=over
+
+=item B<header>
 
 Pattern specifying the header of your logs.
 
@@ -118,9 +122,7 @@ You should probably always write things like:
  ' -{((<%dd>))}-<%pp>- -<(%ll)>- '
 
 
-I<NOTE NOTE NOTE>: The fields are subject to change!
-
-=head3 colors
+=item B<colors>
 
 Put colors in the logs :)
 
@@ -142,7 +144,7 @@ Items are:
 Colors are:
 	black, red, green, yellow, blue, magenta, cyan, white and none
 
-=head3 daemon
+=item B<daemon>
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
@@ -152,7 +154,7 @@ If you specify B<daemon>, you must specify L</file>
 
 The common way to do is the same that with L</verbose>: with Getopt
 
-=head3 file
+=item B<file>
 
 File to write logs to.
 
@@ -162,7 +164,7 @@ File is opened when initializing, and never closed by the module. That is mainly
 
 Side effect is that if you tail -f the log file, you won't see them in real time.
 
-=head3 cosmetic
+=item B<cosmetic>
 
 An alphanumeric char to indicate the log level in your logs.
 
@@ -170,13 +172,13 @@ There will be as many as these chars as the log level of the string being logged
 
 Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
 
-=head3 error_header
+=item error_header
 
 Header you want to see in the logs when you call the B<error> function (if you import it, of course)
 
 Default is '## Oops! ##'.
 
-=head3 fun
+=item B<fun   >
 
 Probability of fun in your logs.
 
@@ -184,7 +186,7 @@ Should be: 0<fun<=100
 
 It use Log::Funlog::Lang
 
-=head3 caller
+=item B<caller>
 
 'all' if you want the stack of subs.
 
@@ -195,6 +197,12 @@ If you specify a number B<n>, it will print the B<n> last calls (yes, if you spe
 If this number is negative, it will print the B<n> first calls.
 
 Of course, nothing will happen if no L</header> is specified, nor %ss in the L</header> ...
+
+=item B<splash>
+
+1 if you want a 'splash log'
+
+=back
 
 =head1 EXAMPLE
 
@@ -226,15 +234,18 @@ Here is an example with almost all of the options enabled:
 
  :wq
 
- $ ./gna.pl
- Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] I'm logged...
- Wed Sep 22 18:50:34 2004 [gna.pl] [xxx  ] Me too...
- Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] Onetwo1C++
- Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] Groumpf...  oups!
- Wed Sep 22 18:50:34 2004 [gna.pl] [x    ] Groumpf...  Zut
-
+ $ perl gna.pl
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ]  I'm logged...
+ Tue Jul 26 15:39:41 2005 [gna.pl] [xxx  ]  Me too...
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ] {ze_sub} Onetwo1C++
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ] {ze_sub} Groumpf...  oups!
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ]  Groumpf...  Zut
 
 =head1 BUGS
+
+=over
+
+=item first
 
 This:
 
@@ -248,9 +259,33 @@ Workaround is:
 
 And this kind of workaround work for everything but %ss, as it is not calculated during initialization.
 
+=item second
+
+ *Log=Log::Funlog->new(
+  colors => 1,
+  colors => {
+	 date => 'white'
+  }
+ )
+
+Is not the same as:
+
+ *Log=Log::Funlog->new(
+  colors => {
+	 date => 'white'
+  },
+  colors => 1,
+ )
+
+First case will do what you expect, second case will put default colors.
+
+To avoid that, specify EITHER colors => 1 OR colors => {<something>}
+
+=back
+
 =head1 DEPENDENCIES
 
-Log::Funlog::Lang provide the funny messages.
+Log::Funlog::Lang : provide the funny messages.
 
 =head1 DISCUSSION
 
@@ -290,7 +325,7 @@ See Changelog
 
 =head1 AUTHOR
 
-Gabriel Guillon, from Chashew team
+Gabriel Guillon, from Cashew team
 
 korsani-spam@free-spam.fr-spam
 
@@ -305,16 +340,23 @@ Let me know if you have added some features, or removed some bugs ;)
 =cut
 
 package Log::Funlog;
+use Carp;
+use strict;
 
 BEGIN {
 	use Exporter;
+	our ($VERSION, @ISA, @EXPORT, @EXPORT_OK );
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION='0.84_3';
+	$VERSION='0.84_4';
+	sub VERSION {
+		my $me=shift;
+		my $askedver=shift;
+		$VERSION=~s/(.*)_\d+/$1/;
+		croak "Please update: $me is version $VERSION and you asked version $askedver" if ($VERSION < $askedver);
+	}
 }
-use Carp;
-use strict;
 my @fun;
 eval {require Log::Funlog::Lang};
 if ($@) {
@@ -323,7 +365,6 @@ if ($@) {
 	@fun=Log::Funlog::Lang->new();
 }
 #use Sys::Syslog;
-use Scalar::Util qw(tainted);
 my $count=0;
 use vars qw( %args $me $error_header $error $metaheader);
 
@@ -430,25 +471,25 @@ sub new {
 	#We will build %colors here.
 	#If color is wanted:
 	#	if default is wanted, %colors = %defaultcolors
-	#	if not, %colors = %defaultcolors, overrident by the parameters provided
+	#	if not, %colors = %defaultcolors, overriden by the parameters provided
 	#If no colors is wanted, %colors will be filled with the 'none' colors.
 	#
 	#This way of doing should be quicker :)
 	#
-	if (exists $args{'colors'}) {						#If color is wanted
+	if (exists $args{'colors'}) {							#If color is wanted
 		use Config;
-		if ($Config{'osname'} eq 'MSWin32') {				#Oh oh! AFAIK MSWin console do not support color...
-			carp 'Colors wanted, but MSwin detected. Colors deactivated.';
+		if ($Config{'osname'} eq 'MSWin32') {				#Oh oh!
+			carp 'Colors wanted, but MSwin detected. Colors deactivated (because not implemented yet)';
 			delete $args{'colors'};
-			$colortable{'none'}='';					#putting 'none' color to void
+			$colortable{'none'}='';							#putting 'none' color to void
 			foreach my $color (keys %defaultcolors) {
 				$colors{$color}=$colortable{'none'};		#and propagating it
 			}
 #			no Config;
-		} else {						#We are not in MSWin...
+		} else {											#We are not in MSWin...
 			if (ref(\$args{'colors'}) eq 'SCALAR') {		#default colors?	
 				%colors=%defaultcolors if ($args{'colors'});
-			} elsif(ref($args{'colors'}) eq 'HASH') {	#No... Overridden colors :)
+			} elsif(ref($args{'colors'}) eq 'HASH') {		#No... Overridden colors :)
 				foreach my $item (keys %defaultcolors) {
 					$colors{$item}=exists ${		#If the color is provided
 						$args{'colors'}
@@ -463,7 +504,7 @@ sub new {
 				croak("'colors' must be type of SCALAR or HASH, not ".ref($args{'colors'})."\n");
 			}
 		}
-	} else {									#no colors? so the color table will contain the color 'none'
+	} else {										#no colors? so the color table will contain the color 'none'
 		$colortable{'none'}='' if ($Config{'osname'} eq 'MSWin32');
 		foreach my $item (keys %defaultcolors) {
 			$colors{$item}=$colortable{'none'};
@@ -518,7 +559,7 @@ sub new {
 	} else {
 		$handleout=\*STDERR;
 	}
-
+	print $handleout $colortable{'red'}.'** '.$colortable{'white'}.'Log::Funlog Powered!'.$colortable{'red'}." **\n".$colortable{'none'} if (defined $args{'splash'});
 
 	my $self = \&wr;
 	bless $self, $class;			#The function's address is now a Log::Funlog object
@@ -534,6 +575,7 @@ sub wr {
 
 	my $prevhandle=select $handleout;
 
+	my $return_code;
 # Header building!!
 #####################################
 
@@ -597,6 +639,7 @@ sub wr {
 	print $colors{'msg'};
 	while (my $tolog=shift) {			#and then print all the things the user wants me to print
 		print $tolog;
+		$return_code.=$tolog;
 	}
 	print $colortable{'none'};
 	print "\n";
@@ -604,12 +647,12 @@ sub wr {
 	print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#write a bit of fun, but not in the first 10 lines
 	select($prevhandle);
 	$count++;
-	return 1;
+	return $return_code;
 }
 sub error {
 	$error=1;
-	wr(1,$error_header," ",@_);
+	my $ec=wr(1,$error_header," ",@_);
 	$error=0;
-	return 1;
+	return $ec;
 }
 1;

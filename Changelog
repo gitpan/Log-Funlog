@@ -1,8 +1,16 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.84_4		26/07/2005
+ - Test improvement
+ - Doc fixing
+ - The function now return the message printed, instead of just '1' (useful for
+ testing)
+
  0.84_3		16/06/2005
- - doc improvement
+ - Doc improvement
+ - Splash option added
+ - Really check version when you say 'use Log::Funlog <version>'
 	
  0.84_2		25/04/2005
  - test.t was bugged, again

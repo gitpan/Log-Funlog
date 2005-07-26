@@ -1,7 +1,7 @@
 - Customizable fun messages. Should it be an option with Funlog->new ? Should it be choosen at make time?
- - For now, it is a separate module. Maybe messages should be in an other separate file.
-- Politically correct version (with no code related to fun). Made with a diff? Modulable code compiled? ("make pc ? perl Makefile.PL --pc?")
+	- For now, it is a separate module. Maybe messages should be in an other separate file.
 - maybe code and/or speed improvement ;)
 - check if cosmetic if 1 char long
 - Improve testing codes
 - Maybe use Color::Output. But I'm afraid it will slow the things a lot.
+- the function should return error codes. Maybe
