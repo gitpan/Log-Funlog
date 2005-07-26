@@ -40,9 +40,7 @@ B<NOTE NOTE NOTE>: Interface (L</header>) is subject to change!
 
 =head2 MANDATORY OPTION
 
-=over
-
-=item B<verbose>
+=head3 verbose
 
 In the form B<n>/B<m>, where B<n><B<m> or B<n>=max.
 
@@ -71,13 +69,9 @@ This option is backward compatible with 0.7.x.x versions.
 
 See L</EXAMPLE>
 
-=back
-
 =head2 NON MANDATORIES OPTIONS
 
-=over
-
-=item B<header>
+=head3 header
 
 Pattern specifying the header of your logs.
 
@@ -126,7 +120,7 @@ You should probably always write things like:
 
 I<NOTE NOTE NOTE>: The fields are subject to change!
 
-=item B<colors>
+=head3 colors
 
 Put colors in the logs :)
 
@@ -148,17 +142,17 @@ Items are:
 Colors are:
 	black, red, green, yellow, blue, magenta, cyan, white and none
 
-=item B<daemon>
+=head3 daemon
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
-When B<daemon>=1, L<Log::Funlog|Log::Funlog> write to L</file> instead of B<STDERR>
+When B<daemon>=1, L</Log::Funlog> write to L</file> instead of B<STDERR>
 
 If you specify B<daemon>, you must specify L</file>
 
 The common way to do is the same that with L</verbose>: with Getopt
 
-=item B<file>
+=head3 file
 
 File to write logs to.
 
@@ -168,7 +162,7 @@ File is opened when initializing, and never closed by the module. That is mainly
 
 Side effect is that if you tail -f the log file, you won't see them in real time.
 
-=item B<cosmetic>
+=head3 cosmetic
 
 An alphanumeric char to indicate the log level in your logs.
 
@@ -176,21 +170,21 @@ There will be as many as these chars as the log level of the string being logged
 
 Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
 
-=item B<error_header>
+=head3 error_header
 
 Header you want to see in the logs when you call the B<error> function (if you import it, of course)
 
 Default is '## Oops! ##'.
 
-=item B<fun>=n%
+=head3 fun
 
-Probs of fun in your logs.
+Probability of fun in your logs.
 
 Should be: 0<fun<=100
 
-See the sources of L<Log::Funlog|Log::Funlog> if you want to change the sentences
+It use Log::Funlog::Lang
 
-=item B<caller>
+=head3 caller
 
 'all' if you want the stack of subs.
 
@@ -201,8 +195,6 @@ If you specify a number B<n>, it will print the B<n> last calls (yes, if you spe
 If this number is negative, it will print the B<n> first calls.
 
 Of course, nothing will happen if no L</header> is specified, nor %ss in the L</header> ...
-
-=back
 
 =head1 EXAMPLE
 
@@ -319,7 +311,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION='0.84_2';
+	$VERSION='0.84_3';
 }
 use Carp;
 use strict;

@@ -1,6 +1,9 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.84_3		16/06/2005
+ - doc improvement
+	
  0.84_2		25/04/2005
  - test.t was bugged, again
 
