@@ -1,6 +1,14 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.84_5
+ - Check if cosmetic is one char long, and printable
+ - In tests, test if /dev/null is writable, instead of checking OS
+ - Adding tests to check wether options are failing when they should
+ - Fixing a bug that make daemon => 0 act like daemon => 1
+ - Use Log::Funlog::Lang 0.3
+ - Much more accurate testing
+ 
  0.84_4		26/07/2005
  - Test improvement
  - Doc fixing

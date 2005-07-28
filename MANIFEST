@@ -3,7 +3,8 @@ MANIFEST
 MANIFEST.SKIP
 lib/Log/Funlog.pm
 Makefile.PL
-t/test1.t
+t/init.t
+t/work.t
 README
 TODO
 Changelog

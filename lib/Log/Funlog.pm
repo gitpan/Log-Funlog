@@ -75,6 +75,83 @@ See L</EXAMPLE>
 
 =over
 
+=item B<caller>
+
+'all' if you want the stack of subs.
+
+'last' if you want the last call.
+
+If you specify a number B<n>, it will print the B<n> last calls (yes, if you specify '1', it is equivalent to 'last')
+
+If this number is negative, it will print the B<n> first calls.
+
+Of course, nothing will happen if no L</header> is specified, nor %ss in the L</header> ...
+
+=item B<colors>
+
+Put colors in the logs :)
+
+If you just put '1', it will use default colors:
+
+ colors => '1',
+
+If you want to override default colors, specify a hash containing item => color
+
+ colors => {'prog' => 'white', 'date' => 'yellow' },
+
+Items are:
+
+	caller: for the stack of calls,
+	prog: for the name of the program,
+	date: for the current date,
+	level: for the log level,
+	msg: for the log message
+
+Colors are:
+	black, red, green, yellow, blue, magenta, cyan, white and none
+
+=item B<cosmetic>
+
+An alphanumeric char to indicate the log level in your logs.
+
+There will be as many as these chars as the log level of the string being logged. See L</EXAMPLE>
+
+Should be something like 'x', or '*', or '!', or any printable single character.
+
+=item B<daemon>
+
+1 if the script should be a daemon. (default is 0: not a daemon)
+
+When B<daemon>=1, L</Log::Funlog> write to L</file> instead of B<STDERR>
+
+If you specify B<daemon>, you must specify L</file>
+
+The common way to do is the same that with L</verbose>: with Getopt
+
+=item B<file>
+
+File to write logs to.
+
+MUST be specified if you specify L</daemon>
+
+File is opened when initializing, and never closed by the module. That is mainly to avoid open and close the file each time you log something and then increase speed.
+
+Side effect is that if you tail -f the log file, you won't see them in real time.
+
+=item B<error_header>
+
+Header you want to see in the logs when you call the B<error> function (if you import it, of course)
+
+Default is '## Oops! ##'.
+
+=item B<fun>
+
+Probability of fun in your logs.
+
+Should be: 0<fun<=100
+
+It use Log::Funlog::Lang
+
 =item B<header>
 
 Pattern specifying the header of your logs.
@@ -120,83 +197,6 @@ won't print anything if you log from outside a sub. Both will have the same effe
 
 You should probably always write things like:
  ' -{((<%dd>))}-<%pp>- -<(%ll)>- '
-
-
-=item B<colors>
-
-Put colors in the logs :)
-
-If you just put '1', it will use default colors:
-
- colors => '1',
-
-If you want to override default colors, specify a hash containing item => color
-
- colors => {'prog' => 'white', 'date' => 'yellow' },
-
-Items are:
-	caller: for the stack of calls,
-	prog: for the name of the program,
-	date: for the current date,
-	level: for the log level,
-	msg: for the log message
-
-Colors are:
-	black, red, green, yellow, blue, magenta, cyan, white and none
-
-=item B<daemon>
-
-1 if the script should be a daemon. (default is 0: not a daemon)
-
-When B<daemon>=1, L</Log::Funlog> write to L</file> instead of B<STDERR>
-
-If you specify B<daemon>, you must specify L</file>
-
-The common way to do is the same that with L</verbose>: with Getopt
-
-=item B<file>
-
-File to write logs to.
-
-MUST be specified if you specify L</daemon>
-
-File is opened when initializing, and never closed by the module. That is mainly to avoid open and close the file each time you log something and then increase speed.
-
-Side effect is that if you tail -f the log file, you won't see them in real time.
-
-=item B<cosmetic>
-
-An alphanumeric char to indicate the log level in your logs.
-
-There will be as many as these chars as the log level of the string being logged. See L</EXAMPLE>
-
-Should be something like 'x', or '*', or '!', but actually no test are performed to verify that there is only one caracter...
-
-=item error_header
-
-Header you want to see in the logs when you call the B<error> function (if you import it, of course)
-
-Default is '## Oops! ##'.
-
-=item B<fun   >
-
-Probability of fun in your logs.
-
-Should be: 0<fun<=100
-
-It use Log::Funlog::Lang
-
-=item B<caller>
-
-'all' if you want the stack of subs.
-
-'last' if you want the last call.
-
-If you specify a number B<n>, it will print the B<n> last calls (yes, if you specify '1', it is equivalent to 'last')
-
-If this number is negative, it will print the B<n> first calls.
-
-Of course, nothing will happen if no L</header> is specified, nor %ss in the L</header> ...
 
 =item B<splash>
 
@@ -245,7 +245,7 @@ Here is an example with almost all of the options enabled:
 
 =over
 
-=item first
+=item 1-
 
 This:
 
@@ -259,7 +259,7 @@ Workaround is:
 
 And this kind of workaround work for everything but %ss, as it is not calculated during initialization.
 
-=item second
+=item 2-
 
  *Log=Log::Funlog->new(
   colors => 1,
@@ -285,7 +285,7 @@ To avoid that, specify EITHER colors => 1 OR colors => {<something>}
 
 =head1 DEPENDENCIES
 
-Log::Funlog::Lang : provide the funny messages.
+Log::Funlog::Lang > 0.3 : provide the funny messages.
 
 =head1 DISCUSSION
 
@@ -349,20 +349,19 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION='0.84_4';
+	$VERSION='0.84_5';
 	sub VERSION {
-		my $me=shift;
-		my $askedver=shift;
+		(my $me, my $askedver)=@_;
 		$VERSION=~s/(.*)_\d+/$1/;
 		croak "Please update: $me is version $VERSION and you asked version $askedver" if ($VERSION < $askedver);
 	}
 }
 my @fun;
-eval {require Log::Funlog::Lang};
+eval 'use Log::Funlog::Lang 0.3';
 if ($@) {
 	@fun=();
 } else {
-	@fun=Log::Funlog::Lang->new();
+	@fun=@{ (Log::Funlog::Lang->new())[1] };
 }
 #use Sys::Syslog;
 my $count=0;
@@ -432,19 +431,19 @@ sub new {
 
 
 	# Okay, now sanity checking!
-	# This is cool because we have time, so we can do all sort of checking, calculating, things like that
+	# This is cool because we have time, so we can do all kind of checking, calculating, things like that
 	#########################################
-	if (defined $args{daemon}) {
+	if (defined $args{daemon} and $args{daemon}) {
 		croak 'You want me to be a daemon, but you didn\'t specifie a file to log to...' unless (defined $args{file});
 	}
 	croak "'verbose' option is mandatory." if (! $args{'verbose'});
-	croak "'verbose' should be of the form n/m or max/m" if (($args{'verbose'} !~ /^\d+\/\d+$/) and ($args{'verbose'} !~ /^max\/\d+$/));
+	croak "'verbose' should be of the form n/m or max/m" if (($args{'verbose'} !~ /^\d+\/\d+$/) and ($args{'verbose'} !~ /^[mM][aA][xX]\/\d+$/));
 
 	# Parsing 'verbose' option...
 	#########################################
 	my ($verbose,$levelmax)=split('/',$args{verbose});
 	$levelmax=$levelmax ? $levelmax : "";						#in case it is not defined...
-	$verbose=$levelmax if ($verbose =~ /^max$/);
+	$verbose=$levelmax if ($verbose =~ /^[mM][aA][xX]$/);
 	if (($verbose !~ /\d+/) or ($levelmax !~ /\d+/)) {
 		carp "Arguments in 'verbose' should be of the form n/m, where n and m are numerics.\nAs this is a new feature, I'll assume you didn't upgraded your script so I'll make it compatible...\nAnyhow, consider upgrading soon!\n";
 		croak "No 'levelmax' provided" unless ($args{levelmax});
@@ -463,7 +462,7 @@ sub new {
 	if (defined $args{fun}) {
 		croak "'fun' should only be a number (between 0 and 100, bounds excluded)." if ($args{fun} !~ /^\d+$/);
 		croak "0<fun<=100" if ($args{fun}>100 or $args{fun}<=0);
-		croak "You want fun but Log::Funlog::Lang is not available." if ($#fun <= 0);
+		croak "You want fun but Log::Funlog::Lang is not available, or is too old." if ($#fun <= 0);
 	}
 
 	# Colors
@@ -518,7 +517,11 @@ sub new {
 
 # We define default cosmetic if no one was defined
 #########################################
-	$args{cosmetic}='x' if (not defined $args{cosmetic});
+	if (not defined $args{cosmetic}) {
+		$args{'cosmetic'}='x';
+	} elsif ($args{'cosmetic'} !~ /^[[:^cntrl:]]$/) {
+		croak("'cosmetic' must be one character long, and printable.");
+	}
 
 # Parsing header. Goal is to avoid work in the wr() function
 #########################################

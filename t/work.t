@@ -1,38 +1,26 @@
 #!/usr/bin/perl -w
 use Test::More qw(no_plan);
 
-use_ok('Log::Funlog');
-can_ok('Log::Funlog','error');
+BEGIN {
+	use_ok('Log::Funlog',"error","0.1");
+}
 
-use Log::Funlog qw( error );
 use Config;
-if ($Config{'osname'} eq 'linux' or $Config{'osname'} eq 'darwin') {
+if ( -c '/dev/null' and -w '/dev/null') {
 	$file='/dev/null';
 	$daemon=1;
-} elsif ($Config{'osname'} eq 'MSWin32') {
-	$file='c:\\test4log-funlog.tmp',
-	$daemon=0;
 } else {
-	print "** Unknown OS **\n";
+	diag "** no /dev/null available (or not writable) **\n";
 	$file='c:\\test4log-funlog.tmp',
 	$daemon=0;
 }
-SKIP: {
-	eval{ require Log::Funlog::Lang};
-	if (!$@) {
-		$fun=50;
-	} else {
-		skip('No fun: Log::Funlog::Lang is not installed');
-		$fun=0;
-	}
-}
+isa_ok( Log::Funlog->new(verbose => '1/1'), 'Log::Funlog','Object returned is a Log::Funlog object' );
 *Log=Log::Funlog->new(
-	file => $file,
 	verbose => '5/5',
 	cosmetic => '*',
 	caller => 'all',
 	daemon => $daemon,
-	fun => $fun,
+	file => $file,
 	colors => {
 		'date' => 'black',
 		'caller' => 'green',
@@ -40,8 +28,6 @@ SKIP: {
 	},
 	header => ' ) %dd ( )>-%pp-<(O)>%l--l<( %s{||}s '
 );
-isa_ok( \&Log, 'Log::Funlog','&Log is not a Log::Funlog object' );
-
 for ($j=1;$j<=5;$j++) {
 	$sent="Log level $j";
 	is( Log($j,$sent), $sent,$sent);
@@ -52,14 +38,14 @@ sub gna {
 		is( Log($j,$sent) ,$sent,$sent);
 	}
 	&gna2;
-	like( error("An error occured here"),qr/An error occured here/);
+	like( error("An error occured here"),qr/An error occured here/, 'error in gna');
 }
 sub gna2 {
 	for ($j=1;$j<=5;$j++) {
 		$sent="Gna2 sub level $j";
 		is( Log($j,$sent),$sent,$sent);
 	}
-	like( error("An error occured here"),qr/An error occured here/);
+	like( error("An error occured here"),qr/An error occured here/,'error in gna2');
 	&gna3;
 }
 sub gna3 {
@@ -67,7 +53,9 @@ sub gna3 {
 		$sent="Gna3 sub level $j";
 		is( Log($j,$sent),$sent,$sent);
 	}
-	like( error("An error occured here"),qr/An error occured here/);
+	like( error("An error occured here"),qr/An error occured here/,'error in gna3');
 }
 gna;
 ok( ! Log(6,"plop"), 'Log level 6 (which should not be printed)' );
+#The next one MUST BE at the end
+ok( eval{ require Log::Funlog; $tmp="/tmp/$$"; Log::Funlog->new( verbose => '1/1', daemon => '1', file => "$tmp"); Log(1,'test'); unlink $tmp}, 'Creation of log file' );
