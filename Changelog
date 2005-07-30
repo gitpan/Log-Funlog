@@ -1,7 +1,10 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
- 0.84_5
+ 0.84_5		30/07/2005
+ - Test failed on win32
+ 
+ 0.84_5		28/07/2005
  - Check if cosmetic is one char long, and printable
  - In tests, test if /dev/null is writable, instead of checking OS
  - Adding tests to check wether options are failing when they should

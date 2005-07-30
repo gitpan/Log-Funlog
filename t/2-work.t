@@ -1,6 +1,9 @@
 #!/usr/bin/perl -w
 use Test::More qw(no_plan);
 
+# Test if its work
+# Should always be good as these tests are rather dumbs...
+
 BEGIN {
 	use_ok('Log::Funlog',"error","0.1");
 }
@@ -11,7 +14,7 @@ if ( -c '/dev/null' and -w '/dev/null') {
 	$daemon=1;
 } else {
 	diag "** no /dev/null available (or not writable) **\n";
-	$file='c:\\test4log-funlog.tmp',
+	$file='test4log-funlog.tmp',
 	$daemon=0;
 }
 isa_ok( Log::Funlog->new(verbose => '1/1'), 'Log::Funlog','Object returned is a Log::Funlog object' );
@@ -58,4 +61,5 @@ sub gna3 {
 gna;
 ok( ! Log(6,"plop"), 'Log level 6 (which should not be printed)' );
 #The next one MUST BE at the end
-ok( eval{ require Log::Funlog; $tmp="/tmp/$$"; Log::Funlog->new( verbose => '1/1', daemon => '1', file => "$tmp"); Log(1,'test'); unlink $tmp}, 'Creation of log file' );
+diag($file);
+ok( eval{ use Log::Funlog; Log::Funlog->new( verbose => '1/1', daemon => '1', file => "$file"); Log(1,'test')}, 'Creation of log file' );

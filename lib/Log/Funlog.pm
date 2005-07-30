@@ -349,7 +349,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error );
-	$VERSION='0.84_5';
+	$VERSION='0.84_6';
 	sub VERSION {
 		(my $me, my $askedver)=@_;
 		$VERSION=~s/(.*)_\d+/$1/;

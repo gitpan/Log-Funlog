@@ -1,9 +1,11 @@
 #!/usr/bin/perl -w
 use Test::More qw(no_plan);
+use Config;
+
+# Tests to check if options given at initialization are failing as expecting
 
 
 BEGIN {
-	diag('Tests to check if options given at initialization are failing as expecting');
 	use_ok('Log::Funlog',"error","0.1");
 }
 ok(! eval{ use Log::Funlog; Log::Funlog->new() }, "No 'verbose' specified");
@@ -14,10 +16,10 @@ ok(! eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',cosmetic => "\t") 
 ok(! eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',cosmetic => 'ee') }, 'cosmetic => "ee"');
 ok(  eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',daemon => 0) }, 'daemon => 0');
 ok(! eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',daemon => 1) }, "'daemon' specified without 'file'");
-ok(! eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',colors => [1] ) }, 'colors => [1]');
 SKIP: {
 	use Config;
-	skip 'Not on MSWin32' if ($Config{'osname'} ne 'MSWin32');
+	skip('We are on MSWin32',2) if ($Config{'osname'} eq 'MSWin32');
+	ok(! eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',colors => [1] ) }, 'colors => [1]');
 	ok(! eval{ use Log::Funlog;  Log::Funlog->new(verbose => '1/1',colors => 1)}, 'Colors wanted but we are on win32');
 }
 SKIP: {
