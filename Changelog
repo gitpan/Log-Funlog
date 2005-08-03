@@ -1,6 +1,9 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.84_6		30/07/2005
+ - Test 1-init.t failed when not on Win32...
+
  0.84_5		30/07/2005
  - Test failed on win32
  

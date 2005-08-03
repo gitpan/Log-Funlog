@@ -20,7 +20,7 @@ SKIP: {
 	use Config;
 	skip('We are on MSWin32',2) if ($Config{'osname'} eq 'MSWin32');
 	ok(! eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',colors => [1] ) }, 'colors => [1]');
-	ok(! eval{ use Log::Funlog;  Log::Funlog->new(verbose => '1/1',colors => 1)}, 'Colors wanted but we are on win32');
+	ok( eval{ use Log::Funlog; Log::Funlog->new(verbose => '1/1',colors => 1)}, 'Colors wanted but we are on win32');
 }
 SKIP: {
 	eval{ require Log::Funlog::Lang };
