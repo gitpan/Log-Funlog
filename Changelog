@@ -1,6 +1,9 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.85_1		04/04/2005
+ * Fix: no more garbage in the directory :)
+
  0.85		04/04/2005
  + Enh: You can say colors => 0 to disable color
  * Bug: basename didn't exist on Windows, so use File::Basename

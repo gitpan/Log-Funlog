@@ -348,7 +348,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error $VERBOSE $LEVELMAX $VERSION );
-	$VERSION='0.85';
+	$VERSION='0.85_1';
 	sub VERSION {
 		(my $me, my $askedver)=@_;
 		$VERSION=~s/(.*)_\d+/$1/;
