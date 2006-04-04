@@ -1,5 +1,3 @@
-#	$Header: /var/cvs/sources/Funlog/lib/Log/Funlog.pm,v 1.48 2005/02/17 11:24:25 gab Exp $
-
 =head1 NAME
 
 Log::Funlog - Log module with fun inside!
@@ -342,14 +340,15 @@ Let me know if you have added some features, or removed some bugs ;)
 package Log::Funlog;
 use Carp;
 use strict;
+use File::Basename;
 
 BEGIN {
 	use Exporter;
 	our ($VERSION, @ISA, @EXPORT, @EXPORT_OK );
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
-	@EXPORT_OK=qw( &error );
-	$VERSION='0.84_7';
+	@EXPORT_OK=qw( &error $VERBOSE $LEVELMAX $VERSION );
+	$VERSION='0.85';
 	sub VERSION {
 		(my $me, my $askedver)=@_;
 		$VERSION=~s/(.*)_\d+/$1/;
@@ -357,6 +356,8 @@ BEGIN {
 	}
 }
 my @fun;
+our %args;
+
 eval 'use Log::Funlog::Lang 0.3';
 if ($@) {
 	@fun=();
@@ -475,7 +476,7 @@ sub new {
 	#
 	#This way of doing should be quicker :)
 	#
-	if (exists $args{'colors'}) {							#If color is wanted
+	if (exists $args{'colors'} and $args{'colors'} ) {							#If color is wanted
 		use Config;
 		if ($Config{'osname'} eq 'MSWin32') {				#Oh oh!
 			carp 'Colors wanted, but MSwin detected. Colors deactivated (because not implemented yet)';
@@ -504,7 +505,7 @@ sub new {
 			}
 		}
 	} else {										#no colors? so the color table will contain the color 'none'
-		$colortable{'none'}='' if ($Config{'osname'} eq 'MSWin32');
+		$colortable{'none'}='';						#Avoid printing "\e[0m" :)
 		foreach my $item (keys %defaultcolors) {
 			$colors{$item}=$colortable{'none'};
 		}
@@ -540,7 +541,7 @@ sub new {
 		$metaheader=replace($metaheader,"d",$colors{'date'}."\$date".$colortable{'none'});
 
 		# but %pp won't vary
-		$me=`basename $0`;
+		$me=basename("$0");
 		chomp $me;
 		$whattoprint{'p'}=1 if ($metaheader=~/\%p.*p/);
 		$metaheader=replace($metaheader,"p",$colors{'prog'}.$me.$colortable{'none'});

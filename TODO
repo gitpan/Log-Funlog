@@ -5,3 +5,6 @@
 - Improve testing codes
 - Maybe use Color::Output. But I'm afraid it will slow the things a lot.
 - the function should return error codes. Maybe
+- Log both on stderr and file
+- Une option pour faire que qd on log un tableau, ca fasse plusieurs lignes dans les logs
+- Apparement, mm --nocolors sort des caractères bizarre (pour dire qu'il n'y a pas de couleurs, certes, mais c moche)

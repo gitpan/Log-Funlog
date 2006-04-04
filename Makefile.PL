@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-#$Header: /var/cvs/sources/Funlog/Makefile.PL,v 1.11 2005/02/17 11:24:25 gab Exp $
 use ExtUtils::MakeMaker;
 
 WriteMakefile(

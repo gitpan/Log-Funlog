@@ -61,5 +61,4 @@ sub gna3 {
 gna;
 ok( ! Log(6,"plop"), 'Log level 6 (which should not be printed)' );
 #The next one MUST BE at the end
-diag($file);
 ok( eval{ use Log::Funlog; Log::Funlog->new( verbose => '1/1', daemon => '1', file => "$file"); Log(1,'test')}, 'Creation of log file' );
