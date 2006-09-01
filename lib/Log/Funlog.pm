@@ -55,7 +55,7 @@ The common way to define B<n> is to take it from the command line with Getopt:
  use Getopt::Long;
  use Log::Funlog;
  &GetOptions("verbose=s",\$verbose);
- *Log=new Log::Funlog(
+ *Log=Log::Funlog->new(
 	[...]
 	verbose => "$verbose/5",
 	[...]
@@ -199,6 +199,19 @@ You should probably always write things like:
 =item B<splash>
 
 1 if you want a 'splash log'
+
+=item B<-n>
+
+You can write stuff like that:
+
+ Log(1,'-n',"plop");
+ Log(1,"plop");
+
+This will output something like:
+
+ [x] plopplop
+
+'-n' parameter allows you to use something else than '-n' to copy the '-n' parameter of L<echo(3)>
 
 =back
 
@@ -348,7 +361,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error $VERBOSE $LEVELMAX $VERSION );
-	$VERSION='0.85_1';
+	$VERSION='0.86';
 	sub VERSION {
 		(my $me, my $askedver)=@_;
 		$VERSION=~s/(.*)_\d+/$1/;
@@ -402,7 +415,8 @@ my %defaultcolors=(
 	'prog' => $colortable{'magenta'},
 	'msg' => $colortable{'yellow'}
 );
-my %colors;				#will contain the printed colors. It is the same than %defaultcolors, but probably different :)
+my %colors;		#will contain the printed colors. It is the same than %defaultcolors, but probably different :)
+our $hadnocr=0;		#Remember if previous call had $nocr (to print header at first call with $nocr, but not further)
 
 ################################################################################################################################
 sub replace {						#replace things like %l<-->l by things like <-** ->
@@ -563,16 +577,24 @@ sub new {
 	} else {
 		$handleout=\*STDERR;
 	}
-	print $handleout $colortable{'red'}.'** '.$colortable{'white'}.'Log::Funlog Powered!'.$colortable{'red'}." **\n".$colortable{'none'} if (defined $args{'splash'});
+# -n handling
+##########################################
+	$args{'-n'}='-n' unless $args{'-n'};
+
+##########################################
+# End of parsing
+##########################################
 
 	my $self = \&wr;
 	bless $self, $class;			#The function's address is now a Log::Funlog object
-#	return $self;					#Return the function's address, that is an object Log::Funlog
+#	return $self;				#Return the function's address, that is an object Log::Funlog
 }
 
-#################################
+########################################################################################
+########################################################################################
 # This is the main function
-#################################
+########################################################################################
+########################################################################################
 sub wr {
 	my $level=shift;						#log level wanted by the user
 	return if ($level > $args{verbose} or $level == 0);	#and exit if it is greater than the verbosity
@@ -580,10 +602,17 @@ sub wr {
 	my $prevhandle=select $handleout;
 
 	my $return_code;
+	my $nocr;
+
 # Header building!!
 #####################################
-
-	if ($metaheader) {							#Hey hey! Won't calculate anything if there is nothing to print!
+	if ($_[0] eq $args{'-n'}) {
+		shift;
+		$nocr=1;
+	} else {
+		$nocr=0;
+	};
+	if ($metaheader and not $hadnocr) {							#Hey hey! Won't calculate anything if there is nothing to print!
 		my $header=$metaheader;
 		if ($whattoprint{'s'}) {						#if the user want to print the call stack
 			my $caller;
@@ -646,11 +675,19 @@ sub wr {
 		$return_code.=$tolog;
 	}
 	print $colortable{'none'};
-	print "\n";
+	print "\n" unless $nocr;
 	#Passe le fun autour de toi!
 	print $fun[1+int(rand $#fun)],"\n" if ($args{fun} and (rand(100)<$args{fun}) and ($count>10));			#write a bit of fun, but not in the first 10 lines
-	select($prevhandle);
+	#print "nc:$nocr\n";
 	$count++;
+	if ($nocr) {
+		$hadnocr=1;
+	} else {
+		$hadnocr=0;
+	}
+	#print "hnc:$hadnocr\n";
+
+	select($prevhandle);
 	return $return_code;
 }
 sub error {
