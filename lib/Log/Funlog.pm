@@ -24,15 +24,15 @@ When you want to log something, just write:
 
  your-sub-log(priority,"what"," I ","wanna log is: ",@an_array)
 
-then the module will analyse if the priority if higher enough (seeing L</verbose> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
+then the module will analyse if the priority if higher enough (seeing L<verbose> option). If yes, your log will be written with the format you decided on STDERR (default) or a file.
 
 As more, the module can write funny things to your logs, if you want ;) It can be very verbose, or just ... shy :)
 
 L<Log::Funlog|Log::Funlog> may export an 'error' function: it logs your message with a priority of 1 and with an specific (parametrable) string. You can use it when you want to highlight error messages in your logsi with a pattern.
 
-Parameters are: L<header>, L<error_header>, L<cosmetic>, L<verbose>, L<file>, L<daemon>, L<fun>, L<colors>, L<splash> and L<caller>
+Parameters are: L<header>, L<error_header>, L<cosmetic> ,L<verbose>, L<file>, L<daemon>, L<fun>, L<colors>, L<splash>, L<-n>, L<caller>, L<ltype>
 
-L</verbose> is mandatory.
+L<verbose> is mandatory.
 
 =head2 MANDATORY OPTION
 
@@ -83,7 +83,7 @@ If you specify a number B<n>, it will print the B<n> last calls (yes, if you spe
 
 If this number is negative, it will print the B<n> first calls.
 
-Of course, nothing will happen if no L</header> is specified, nor %ss in the L</header> ...
+Of course, nothing will happen if no L<header> is specified, nor %ss in the L<header> ...
 
 =item B<colors>
 
@@ -120,27 +120,27 @@ Should be something like 'x', or '*', or '!', or any printable single character.
 
 1 if the script should be a daemon. (default is 0: not a daemon)
 
-When B<daemon>=1, L</Log::Funlog> write to L</file> instead of B<STDERR>
+When B<daemon>=1, L<Log::Funlog> write to L<file> instead of B<STDERR>
 
-If you specify B<daemon>, you must specify L</file>
+If you specify B<daemon>, you must specify L<file>
 
-The common way to do is the same that with L</verbose>: with Getopt
-
-=item B<file>
-
-File to write logs to.
-
-MUST be specified if you specify L</daemon>
-
-File is opened when initializing, and never closed by the module. That is mainly to avoid open and close the file each time you log something and then increase speed.
-
-Side effect is that if you tail -f the log file, you won't see them in real time.
+The common way to do is the same that with L<verbose>: with Getopt
 
 =item B<error_header>
 
 Header you want to see in the logs when you call the B<error> function (if you import it, of course)
 
 Default is '## Oops! ##'.
+
+=item B<file>
+
+File to write logs to.
+
+MUST be specified if you specify L<daemon>
+
+File is opened when initializing, and never closed by the module. That is mainly to avoid open and close the file each time you log something and then increase speed.
+
+Side effect is that if you tail -f the log file, you won't see them in real time.
 
 =item B<fun>
 
@@ -196,6 +196,14 @@ won't print anything if you log from outside a sub. Both will have the same effe
 You should probably always write things like:
  ' -{((<%dd>))}-<%pp>- -<(%ll)>- '
 
+=item B<ltype>
+
+Level printing type. Can be B<sequential> or B<numeric>.
+
+B<sequential> will print level like that: [xx ]. This is the default.
+
+B<numeric> will print level like that: [2]
+
 =item B<splash>
 
 1 if you want a 'splash log'
@@ -211,142 +219,9 @@ This will output something like:
 
  [x] plopplop
 
-'-n' parameter allows you to use something else than '-n' to copy the '-n' parameter of L<echo(3)>
+'-n' parameter allows you to use something else than '-n' to copy the behaviour of the '-n' parameter of L<echo(3)>
 
 =back
-
-=head1 EXAMPLE
-
-Here is an example with almost all of the options enabled:
-
- $ vi gna.pl
- #!/usr/bin/perl -w
- use Log::Funlog qw( error );
- *Log=new Log::Funlog(
-		file => "zou.log",		#name of the file
-		verbose => "3/5",			#verbose 3 out of a maximum of 5
-		daemon => 0,			#I am not a daemon
-		cosmetic => 'x',		#crosses for the level
-		fun => 10,			#10% of fun (que je passe autour de moi)
-		error_header => 'Groumpf... ',  #Header for true errors
-		header => '%dd %p[]p %l[]l %s{}s ',	#The header
-		caller => 1);			#and I want the name of the last sub
-
- Log(1,"I'm logged...");
- Log(3,"Me too...");
- Log(4,"Me not!");          #because 4>verbose
- sub ze_sub {
-	$hop=1;
-	Log(1,"One","two",$hop,"C"."++");
-	error("oups!");
- }
- ze_sub;
- error("Zut");
-
- :wq
-
- $ perl gna.pl
- Tue Jul 26 15:39:41 2005 [gna.pl] [x    ]  I'm logged...
- Tue Jul 26 15:39:41 2005 [gna.pl] [xxx  ]  Me too...
- Tue Jul 26 15:39:41 2005 [gna.pl] [x    ] {ze_sub} Onetwo1C++
- Tue Jul 26 15:39:41 2005 [gna.pl] [x    ] {ze_sub} Groumpf...  oups!
- Tue Jul 26 15:39:41 2005 [gna.pl] [x    ]  Groumpf...  Zut
-
-=head1 BUGS
-
-=over
-
-=item 1-
-
-This:
-
- header => '-(%dd)--( %p)><(p )-( %l)-<>-(l %s)<>(s '
-
-won't do what you expect ( this is the ')><(' )
-
-Workaround is:
-
- header => '-(%dd)--( )>%pp<( )-( %l)-<>-(l %s)<>(s '
-
-And this kind of workaround work for everything but %ss, as it is not calculated during initialization.
-
-=item 2-
-
- *Log=Log::Funlog->new(
-  colors => 1,
-  colors => {
-	 date => 'white'
-  }
- )
-
-Is not the same as:
-
- *Log=Log::Funlog->new(
-  colors => {
-	 date => 'white'
-  },
-  colors => 1,
- )
-
-First case will do what you expect, second case will put default colors.
-
-To avoid that, specify EITHER colors => 1 OR colors => {<something>}
-
-=back
-
-=head1 DEPENDENCIES
-
-Log::Funlog::Lang > 0.3 : provide the funny messages.
-
-=head1 DISCUSSION
-
-As you can see, the 'new' routine return a pointer to a sub. It's the easiest way I found to make this package as easy as possible to use.
-
-I guess that calling the sub each time you want to log something (and even if it won't print anything due to the too low level of the priority given) is not really fast...
-
-Especially if you look at the code, and you see all the stuffs the module do before printing something.
-
-But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something, and what to write
-
-If you want a I<really> fast routine of log, please propose me a way to do it, or do it yourself, or do not log :)
-
-You can probably say:
-
- my Log::Funlog $log = new Log::Funlog;		# $log is now an Log::Funlog object. $log contain the address of the sub used to write.
-
-Then:
-
- &{$log}(1,'plop');
-
-But it is probably not convenient.
-
-=head1 HISTORY
-
-I'm doing quite a lot of Perl scripts, and I wanted the scripts talk to me. So I searched a log routine.
-
-As I didn't found it on the web, and I wanted something more 'personnal' than syslog (I didn't want my script write to syslog), I started to write a very little routine, that I copied to all the scripts I made.
-
-As I copied this routine, I added some stuff to match my needs; I wanted something rather fast, easy to use, easy to understand (even for me :P ), quite smart and ... a little bit funny :)
-
-The I wrote this module, that I 'use Log::Funlog' in each of my scripts.
-
-=head1 CHANGELOG
-
-See Changelog
-
-=head1 AUTHOR
-
-Gabriel Guillon, from Cashew team
-
-korsani-spam@free-spam.fr-spam
-
-(remove you-know-what :)
-
-=head1 LICENCE
-
-As Perl itself.
-
-Let me know if you have added some features, or removed some bugs ;)
 
 =cut
 
@@ -361,7 +236,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw( );
 	@EXPORT_OK=qw( &error $VERBOSE $LEVELMAX $VERSION );
-	$VERSION='0.86';
+	$VERSION='0.87';
 	sub VERSION {
 		(my $me, my $askedver)=@_;
 		$VERSION=~s/(.*)_\d+/$1/;
@@ -370,7 +245,6 @@ BEGIN {
 }
 my @fun;
 our %args;
-
 eval 'use Log::Funlog::Lang 0.3';
 if ($@) {
 	@fun=();
@@ -415,6 +289,7 @@ my %defaultcolors=(
 	'prog' => $colortable{'magenta'},
 	'msg' => $colortable{'yellow'}
 );
+my @authorized_level_types=('numeric','sequential');		#Level types
 my %colors;		#will contain the printed colors. It is the same than %defaultcolors, but probably different :)
 our $hadnocr=0;		#Remember if previous call had $nocr (to print header at first call with $nocr, but not further)
 
@@ -453,6 +328,16 @@ sub new {
 	}
 	croak "'verbose' option is mandatory." if (! $args{'verbose'});
 	croak "'verbose' should be of the form n/m or max/m" if (($args{'verbose'} !~ /^\d+\/\d+$/) and ($args{'verbose'} !~ /^[mM][aA][xX]\/\d+$/));
+
+	# Parsing 'ltype' option
+	#########################################
+	if (defined $args{ltype}) {
+		if (! grep(/$args{ltype}/,@authorized_level_types)) {
+			croak "Unknow ltype '$args{ltype}'";
+		}
+	} else {
+		$args{ltype}='sequential';
+	}
 
 	# Parsing 'verbose' option...
 	#########################################
@@ -659,13 +544,17 @@ sub wr {
 			$header=~s/\$date/$tmp/;
 		}
 		if ($whattoprint{'l'}) {
-			my $tmp=$colors{'level'}.$args{cosmetic} x $level. " " x ($args{levelmax} - $level).$colortable{'none'};
-			
+			my $tmp;
+			if ($args{ltype} eq 'numeric') {
+				$tmp=$colors{'level'}.$level.$colortable{'none'};
+			} elsif ($args{ltype} eq 'sequential') {
+				$tmp=$colors{'level'}.$args{cosmetic} x $level. " " x ($args{levelmax} - $level).$colortable{'none'};	# [xx  ]
+			}
 			$header=~s/\$level/$tmp/;
 		}
 
 		#####################################
-		#	End oh header building
+		#	End of header building
 		#####################################
 		print $header;						#print the header
 	}
@@ -697,3 +586,140 @@ sub error {
 	return $ec;
 }
 1;
+=pod
+
+=head1 EXAMPLE
+
+Here is an example with almost all of the options enabled:
+
+ $ vi gna.pl
+ #!/usr/bin/perl -w
+ use Log::Funlog qw( error );
+ *Log=new Log::Funlog(
+		file => "zou.log",		#name of the file
+		verbose => "3/5",			#verbose 3 out of a maximum of 5
+		daemon => 0,			#I am not a daemon
+		cosmetic => 'x',		#crosses for the level
+		fun => 10,			#10% of fun (que je passe autour de moi)
+		error_header => 'Groumpf... ',  #Header for true errors
+		header => '%dd %p[]p %l[]l %s{}s ',	#The header
+		caller => 1);			#and I want the name of the last sub
+
+ Log(1,"I'm logged...");
+ Log(3,"Me too...");
+ Log(4,"Me not!");          #because 4>verbose
+ sub ze_sub {
+	$hop=1;
+	Log(1,"One","two",$hop,"C"."++");
+	error("oups!");
+ }
+ ze_sub;
+ error("Zut");
+
+ :wq
+
+ $ perl gna.pl
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ]  I'm logged...
+ Tue Jul 26 15:39:41 2005 [gna.pl] [xxx  ]  Me too...
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ] {ze_sub} Onetwo1C++
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ] {ze_sub} Groumpf...  oups!
+ Tue Jul 26 15:39:41 2005 [gna.pl] [x    ]  Groumpf...  Zut
+
+=head1 BUGS
+
+=over
+
+=item 1-
+
+This:
+
+ header => '-(%dd)--( %p)><(p )-( %l)-<>-(l %s)<>(s '
+
+won't do what you expect ( this is the ')><(' )
+
+Workaround is:
+
+ header => '-(%dd)--( )>%pp<( )-( %l)-<>-(l %s)<>(s '
+
+And this kind of workaround work for everything but %ss, as it is not calculated during initialization.
+
+=item 2-
+
+ *Log=Log::Funlog->new(
+  colors => 1,
+  colors => {
+	 date => 'white'
+  }
+ )
+
+Is not the same as:
+
+ *Log=Log::Funlog->new(
+  colors => {
+	 date => 'white'
+  },
+  colors => 1,
+ )
+
+First case will do what you expect, second case will put default colors.
+
+To avoid that, specify EITHER colors => 1 OR colors => {<something>}
+
+=back
+
+=head1 DEPENDENCIES
+
+Log::Funlog::Lang > 0.3 : provide the funny messages.
+
+=head1 DISCUSSION
+
+As you can see, the 'new' routine return a pointer to a sub. It's the easiest way I found to make this package as easy as possible to use.
+
+I guess that calling the sub each time you want to log something (and even if it won't print anything due to the too low level of the priority given) is not really fast...
+
+Especially if you look at the code, and you see all the stuffs the module do before printing something.
+
+But in fact, I tried to make it rather fast, that mean that if the module try to know as fast as possible if it will write something, and what to write
+
+If you want a I<really> fast routine of log, please propose me a way to do it, or do it yourself, or do not log :)
+
+You can probably say:
+
+ my Log::Funlog $log = new Log::Funlog;		# $log is now an Log::Funlog object. $log contain the address of the sub used to write.
+
+Then:
+
+ &{$log}(1,'plop');
+
+But it is probably not convenient.
+
+=head1 HISTORY
+
+I'm doing quite a lot of Perl scripts, and I wanted the scripts talk to me. So I searched a log routine.
+
+As I didn't found it on the web, and I wanted something more 'personnal' than syslog (I didn't want my script write to syslog), I started to write a very little routine, that I copied to all the scripts I made.
+
+As I copied this routine, I added some stuff to match my needs; I wanted something rather fast, easy to use, easy to understand (even for me :P ), quite smart and ... a little bit funny :)
+
+The I wrote this module, that I 'use Log::Funlog' in each of my scripts.
+
+=head1 CHANGELOG
+
+See Changelog
+
+=head1 AUTHOR
+
+Gabriel Guillon, from Cashew team
+
+korsani-spam@caramail(spaaaaaammmm).com[spppam]
+
+(remove you-know-what :)
+
+=head1 LICENCE
+
+As Perl itself.
+
+Let me know if you have added some features, or removed some bugs ;)
+
+=cut
+

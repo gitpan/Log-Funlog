@@ -1,6 +1,13 @@
 vim600: set textwidth=80:
 
 Some revisions were not posted on CPAN; they were "internal"
+ 0.87		21/09/2006
+ + Enh: you can say ltype => 'numeric' or ltype => 'sequential'
+ * Fix: fix dead links in doc
+
+ 0.86		21/08/2006
+ + Enh: '-n' parameter, to act like 'echo -n'
+
  0.85_1		04/04/2005
  * Fix: no more garbage in the directory :)
 
@@ -18,10 +25,10 @@ Some revisions were not posted on CPAN; they were "internal"
  0.84_5		28/07/2005
  + Enh: Check if cosmetic is one char long, and printable
  + Enh: In tests, test if /dev/null is writable, instead of checking OS
- + Adding tests to check wether options are failing when they should
+ + Add: Add tests to check wether options are failing when they should
  * Fix: Fixing a bug that make daemon => 0 act like daemon => 1
- + Use Log::Funlog::Lang 0.3
- + Much more accurate testing
+ + Add: Use Log::Funlog::Lang 0.3
+ + Add: Much more accurate testing
  
  0.84_4		26/07/2005
  + Test improvement
